@@ -1,0 +1,41 @@
+# API Gateway Dependencies
+
+# Core Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+
+# HTTP Client for proxying
+httpx==0.25.2
+aiohttp==3.9.1
+
+# Authentication
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+pyjwt==2.8.0
+
+# Validation
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# Redis (for rate limiting and caching)
+redis[hiredis]==5.0.1
+
+# Database (for session management)
+sqlalchemy[asyncio]==2.0.23
+asyncpg==0.29.0
+
+# Monitoring
+prometheus-client==0.19.0
+prometheus-fastapi-instrumentator==6.1.0
+
+# Utilities
+python-dotenv==1.0.0
+tenacity==8.2.3  # Retry logic
+slowapi==0.1.9  # Rate limiting
+
+# WebSocket
+websockets==12.0
+
+# Logging
+python-json-logger==2.0.7

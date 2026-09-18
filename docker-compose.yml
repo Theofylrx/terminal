@@ -103,26 +103,40 @@ services:
 
   # ==================== API GATEWAY ====================
 
-  # gateway:
-  #   build:
-  #     context: ./gateway
-  #     dockerfile: Dockerfile
-  #   container_name: terminal-gateway
-  #   environment:
-  #     - DATABASE_URL=${DATABASE_URL}
-  #     - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
-  #     - JWT_SECRET=${JWT_SECRET}
-  #     - ENVIRONMENT=${ENVIRONMENT:-development}
-  #     - LOG_LEVEL=${LOG_LEVEL:-INFO}
-  #   ports:
-  #     - "${GATEWAY_PORT:-8080}:8080"
-  #   depends_on:
-  #     - postgres
-  #     - redis
-  #   networks:
-  #     - terminal_network
-  #   restart: unless-stopped
-  #   # Commented out until gateway is built
+  gateway:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    container_name: terminal-gateway
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-trading_user}:${DB_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-terminal_db}
+      - REDIS_URL=redis://redis:6379/0
+      - JWT_SECRET=${JWT_SECRET:-change_this_secret_key_in_production}
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - AUTH_SERVICE_URL=http://auth-service:8000
+      - TRADING_SERVICE_URL=http://trading-service:8000
+      - ANALYTICS_SERVICE_URL=http://analytics-service:8000
+      - STRATEGY_SERVICE_URL=http://strategy-service:8000
+      - NOTIFICATION_SERVICE_URL=http://notification-service:8000
+    ports:
+      - "${GATEWAY_PORT:-8080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./gateway:/app/gateway:ro
+      - ./shared:/app/shared:ro
+    networks:
+      - terminal_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8080/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # ==================== BACKEND SERVICES ====================
 
