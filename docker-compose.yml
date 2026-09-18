@@ -170,27 +170,34 @@ services:
       timeout: 10s
       retries: 3
 
-  # trading-service:
-  #   build:
-  #     context: .
-  #     dockerfile: services/trading-service/Dockerfile
-  #   container_name: terminal-trading
-  #   environment:
-  #     - DATABASE_URL=${DATABASE_URL}
-  #     - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
-  #     - ENVIRONMENT=${ENVIRONMENT:-development}
-  #   ports:
-  #     - "8002:8000"
-  #   depends_on:
-  #     - postgres
-  #     - redis
-  #     - rabbitmq
-  #   volumes:
-  #     - ./services/trading-service:/app
-  #     - ./shared:/shared:ro
-  #   networks:
-  #     - terminal_network
-  #   restart: unless-stopped
+  trading-service:
+    build:
+      context: .
+      dockerfile: services/trading-service/Dockerfile
+    container_name: terminal-trading
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-trading_user}:${DB_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-terminal_db}
+      - REDIS_URL=redis://redis:6379/0
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    ports:
+      - "8002:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./services/trading-service:/app/services/trading-service:ro
+      - ./shared:/app/shared:ro
+    networks:
+      - terminal_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # ==================== TRADING AGENTS ====================
 
