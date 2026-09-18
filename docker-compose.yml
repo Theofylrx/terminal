@@ -1,0 +1,259 @@
+version: '3.8'
+
+# Terminal Trading System - Docker Compose Configuration
+# Development Environment
+
+services:
+  # ==================== DATABASES & INFRASTRUCTURE ====================
+
+  postgres:
+    image: timescale/timescaledb:latest-pg15
+    container_name: terminal-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-trading_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+      POSTGRES_DB: ${POSTGRES_DB:-terminal_db}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - terminal_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-trading_user}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: terminal-redis
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-}
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - terminal_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: terminal-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-trading}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-changeme}
+      RABBITMQ_DEFAULT_VHOST: /
+    ports:
+      - "5672:5672"      # AMQP
+      - "15672:15672"    # Management UI
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - terminal_network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+
+  # ==================== MONITORING ====================
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: terminal-prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infrastructure/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - terminal_network
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: terminal-grafana
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: false
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infrastructure/monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+    depends_on:
+      - prometheus
+    networks:
+      - terminal_network
+    restart: unless-stopped
+
+  # ==================== API GATEWAY ====================
+
+  # gateway:
+  #   build:
+  #     context: ./gateway
+  #     dockerfile: Dockerfile
+  #   container_name: terminal-gateway
+  #   environment:
+  #     - DATABASE_URL=${DATABASE_URL}
+  #     - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+  #     - JWT_SECRET=${JWT_SECRET}
+  #     - ENVIRONMENT=${ENVIRONMENT:-development}
+  #     - LOG_LEVEL=${LOG_LEVEL:-INFO}
+  #   ports:
+  #     - "${GATEWAY_PORT:-8080}:8080"
+  #   depends_on:
+  #     - postgres
+  #     - redis
+  #   networks:
+  #     - terminal_network
+  #   restart: unless-stopped
+  #   # Commented out until gateway is built
+
+  # ==================== BACKEND SERVICES ====================
+
+  # auth-service:
+  #   build:
+  #     context: .
+  #     dockerfile: services/auth-service/Dockerfile
+  #   container_name: terminal-auth
+  #   environment:
+  #     - DATABASE_URL=${DATABASE_URL}
+  #     - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+  #     - JWT_SECRET=${JWT_SECRET}
+  #     - ENVIRONMENT=${ENVIRONMENT:-development}
+  #   ports:
+  #     - "8001:8000"
+  #   depends_on:
+  #     - postgres
+  #     - redis
+  #   volumes:
+  #     - ./services/auth-service:/app
+  #     - ./shared:/shared:ro
+  #   networks:
+  #     - terminal_network
+  #   restart: unless-stopped
+
+  # trading-service:
+  #   build:
+  #     context: .
+  #     dockerfile: services/trading-service/Dockerfile
+  #   container_name: terminal-trading
+  #   environment:
+  #     - DATABASE_URL=${DATABASE_URL}
+  #     - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+  #     - ENVIRONMENT=${ENVIRONMENT:-development}
+  #   ports:
+  #     - "8002:8000"
+  #   depends_on:
+  #     - postgres
+  #     - redis
+  #     - rabbitmq
+  #   volumes:
+  #     - ./services/trading-service:/app
+  #     - ./shared:/shared:ro
+  #   networks:
+  #     - terminal_network
+  #   restart: unless-stopped
+
+  # ==================== TRADING AGENTS ====================
+
+  # market-data-service:
+  #   build:
+  #     context: .
+  #     dockerfile: agents/market-data-service/Dockerfile
+  #   container_name: terminal-market-data
+  #   environment:
+  #     - DATABASE_URL=${DATABASE_URL}
+  #     - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+  #     - ALPACA_API_KEY=${ALPACA_API_KEY}
+  #     - ALPACA_API_SECRET=${ALPACA_API_SECRET}
+  #     - BINANCE_API_KEY=${BINANCE_API_KEY}
+  #     - BINANCE_API_SECRET=${BINANCE_API_SECRET}
+  #     - OANDA_API_KEY=${OANDA_API_KEY}
+  #     - ENVIRONMENT=${ENVIRONMENT:-development}
+  #   depends_on:
+  #     - postgres
+  #     - redis
+  #     - rabbitmq
+  #   volumes:
+  #     - ./agents/market-data-service:/app
+  #     - ./shared:/shared:ro
+  #   networks:
+  #     - terminal_network
+  #   restart: unless-stopped
+
+  # technical-analyst-service:
+  #   build:
+  #     context: .
+  #     dockerfile: agents/technical-analyst-service/Dockerfile
+  #   container_name: terminal-technical-analyst
+  #   environment:
+  #     - DATABASE_URL=${DATABASE_URL}
+  #     - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+  #     - ENVIRONMENT=${ENVIRONMENT:-development}
+  #   depends_on:
+  #     - postgres
+  #     - redis
+  #     - rabbitmq
+  #   volumes:
+  #     - ./agents/technical-analyst-service:/app
+  #     - ./shared:/shared:ro
+  #   networks:
+  #     - terminal_network
+  #   restart: unless-stopped
+  #   # Can scale: docker-compose up -d --scale technical-analyst-service=3
+
+  # ==================== FRONTEND ====================
+
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #     target: development
+  #   container_name: terminal-frontend
+  #   environment:
+  #     - REACT_APP_API_URL=http://localhost:8080
+  #     - REACT_APP_WS_URL=ws://localhost:8080/ws
+  #   ports:
+  #     - "3000:3000"
+  #   depends_on:
+  #     - gateway
+  #   volumes:
+  #     - ./frontend:/app
+  #     - /app/node_modules
+  #   networks:
+  #     - terminal_network
+  #   stdin_open: true
+  #   tty: true
+
+networks:
+  terminal_network:
+    driver: bridge
+    name: terminal_network
+
+volumes:
+  postgres_data:
+    name: terminal_postgres_data
+  redis_data:
+    name: terminal_redis_data
+  rabbitmq_data:
+    name: terminal_rabbitmq_data
+  prometheus_data:
+    name: terminal_prometheus_data
+  grafana_data:
+    name: terminal_grafana_data

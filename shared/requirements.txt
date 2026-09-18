@@ -1,0 +1,14 @@
+# Core dependencies for shared library
+
+# Database
+sqlalchemy[asyncio]==2.0.23
+asyncpg==0.29.0  # PostgreSQL async driver
+alembic==1.13.0  # Database migrations
+
+# Redis
+redis[hiredis]==5.0.1  # Redis with C parser for performance
+
+# Utilities
+python-dotenv==1.0.0
+pydantic==2.5.0
+pydantic-settings==2.1.0

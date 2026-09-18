@@ -1,0 +1,83 @@
+# Prometheus Configuration for Terminal Trading System
+
+global:
+  scrape_interval: 15s  # Scrape targets every 15 seconds
+  evaluation_interval: 15s  # Evaluate rules every 15 seconds
+  external_labels:
+    cluster: 'terminal-trading'
+    environment: 'development'
+
+# Alerting configuration (optional)
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+          # - alertmanager:9093
+
+# Load rules once and periodically evaluate them
+rule_files:
+  # - "alert_rules.yml"
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # API Gateway
+  - job_name: 'gateway'
+    static_configs:
+      - targets: ['gateway:8080']
+    metrics_path: '/metrics'
+
+  # Backend Services
+  - job_name: 'auth-service'
+    static_configs:
+      - targets: ['auth-service:8000']
+    metrics_path: '/metrics'
+
+  - job_name: 'trading-service'
+    static_configs:
+      - targets: ['trading-service:8000']
+    metrics_path: '/metrics'
+
+  - job_name: 'analytics-service'
+    static_configs:
+      - targets: ['analytics-service:8000']
+    metrics_path: '/metrics'
+
+  # Trading Agents
+  - job_name: 'market-data-service'
+    static_configs:
+      - targets: ['market-data-service:8001']
+    metrics_path: '/metrics'
+
+  - job_name: 'technical-analyst-service'
+    static_configs:
+      - targets: ['technical-analyst-service:8001']
+    metrics_path: '/metrics'
+
+  - job_name: 'fundamental-analyst-service'
+    static_configs:
+      - targets: ['fundamental-analyst-service:8001']
+    metrics_path: '/metrics'
+
+  - job_name: 'executor-service'
+    static_configs:
+      - targets: ['executor-service:8001']
+    metrics_path: '/metrics'
+
+  - job_name: 'orchestrator-service'
+    static_configs:
+      - targets: ['orchestrator-service:8001']
+    metrics_path: '/metrics'
+
+  # Infrastructure
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
