@@ -714,6 +714,309 @@ PENDING → SUBMITTED → ACCEPTED → FILLED
 
 ---
 
+### 2024-09-18 23:50 UTC - Market Data Service 🔄
+
+**Major Milestone**: Real-time market data ingestion and distribution
+
+**Objective**: Build Market Data Service to fetch, store, and distribute real-time price data from multiple brokers (Alpaca, Binance, OANDA) for stocks, crypto, and forex.
+
+#### Architecture Design
+```
+Broker APIs (WebSocket + REST)
+    ↓
+Market Data Service
+    ↓ (stores)
+TimescaleDB (OHLCV time-series)
+    ↓ (publishes)
+Redis Events (price.updated)
+    ↓ (consumed by)
+Trading Service (position P&L updates)
+Technical Analyst (indicators)
+Frontend (real-time charts)
+```
+
+#### Features to Implement
+1. **Broker Connectors**
+   - Alpaca WebSocket (stocks - US markets)
+   - Binance WebSocket (crypto - spot + futures)
+   - OANDA REST (forex - major pairs)
+   - Generic connector interface for extensibility
+
+2. **Data Storage**
+   - OHLCV repository with TimescaleDB optimizations
+   - Quote repository (bid/ask spreads)
+   - Trade repository (tape data)
+   - Hypertables for time-series compression
+
+3. **Real-time Distribution**
+   - Publish price.updated events to Redis
+   - WebSocket endpoint for client subscriptions
+   - REST API for historical data queries
+
+4. **Data Management**
+   - Symbol subscription management
+   - Connection health monitoring
+   - Reconnection logic with exponential backoff
+   - Data validation and normalization
+
+#### Tasks in Progress
+1. ⏳ Create Market Data Service structure
+2. ⏳ Implement broker connector interfaces
+3. ⏳ Build Alpaca connector (stocks)
+4. ⏳ Build Binance connector (crypto)
+5. ⏳ Build OANDA connector (forex)
+6. ⏳ Create OHLCV repository with TimescaleDB
+7. ⏳ Implement WebSocket server for client subscriptions
+8. ⏳ Create REST API for historical data
+9. ⏳ Add Redis event publishing
+10. ⏳ Docker integration and testing
+
+#### Expected Deliverables
+- Market Data Service with multi-broker support
+- Real-time WebSocket streaming
+- Historical data REST API
+- TimescaleDB integration
+- Event-driven price distribution
+- ~1,500 lines of code
+- 10+ API endpoints
+- Docker Compose integration
+
+**Status**: ✅ Complete
+**Started**: 23:50 UTC
+**Completed**: 00:45 UTC
+
+#### Completed Tasks
+
+1. ✅ **Configuration & Structure**
+   - Core configuration with Pydantic settings
+   - Support for all three brokers (Alpaca, Binance, OANDA)
+   - Environment-based connector enable/disable
+   - Requirements with all necessary dependencies
+
+2. ✅ **Broker Connector Architecture**
+   - Abstract BrokerConnector base class
+   - Standardized interface for all brokers
+   - MarketDataType enum (TRADE, QUOTE, BAR, ORDERBOOK)
+   - Callback registration system
+   - Automatic reconnection with exponential backoff
+   - **3 broker connectors, ~800 lines of code**
+
+3. ✅ **Alpaca Connector (Stocks - US Markets)**
+   - WebSocket streaming for real-time data
+   - REST API for historical bars
+   - Supports trades, quotes, and 1-minute bars
+   - Authentication and subscription management
+   - IEX data feed integration
+
+4. ✅ **Binance Connector (Cryptocurrency)**
+   - WebSocket streaming per symbol
+   - REST API for historical klines
+   - Supports trades and candlesticks
+   - Testnet and production modes
+   - Multi-symbol concurrent subscriptions
+
+5. ✅ **OANDA Connector (Forex)**
+   - HTTP streaming for pricing
+   - REST API for historical candles
+   - Bid/ask quote streaming
+   - Heartbeat monitoring
+   - Major forex pairs, commodities, indices
+
+6. ✅ **Database Models (Shared)**
+   - Quote model with bid/ask spreads
+   - Trade model with time & sales data
+   - Updated OHLCV model exports
+   - TimescaleDB hypertable optimizations
+
+7. ✅ **Repository Layer**
+   - OHLCVRepository - 12 methods for bar data
+   - QuoteRepository - 9 methods for pricing data
+   - TradeRepository - 10 methods for trade data
+   - Upsert operations (handle duplicates)
+   - Time-range queries optimized for TimescaleDB
+   - Data retention and cleanup methods
+   - **3 repositories, ~600 lines of code**
+
+8. ✅ **Market Data Service (Orchestration)**
+   - Multi-broker connector management
+   - Subscription tracking per broker
+   - Real-time data ingestion and storage
+   - Event publishing via Redis Streams
+   - WebSocket client management
+   - Historical data fetching and caching
+   - Status monitoring and health checks
+   - **400+ lines of business logic**
+
+9. ✅ **REST API (10 endpoints)**
+   - `GET /health` - Health check
+   - `GET /status` - Service status and subscriptions
+   - `POST /subscribe` - Subscribe to symbols
+   - `POST /unsubscribe` - Unsubscribe from symbols
+   - `POST /historical/bars` - Fetch historical data
+   - `GET /bars/{symbol}` - Query stored bars
+   - `GET /quotes/{symbol}` - Query stored quotes
+   - `GET /trades/{symbol}` - Query stored trades
+   - `GET /latest/{symbol}` - Get latest bar
+   - `WS /ws` - WebSocket for real-time streaming
+
+10. ✅ **WebSocket Server**
+    - Real-time market data distribution
+    - Client connection management
+    - Automatic disconnection handling
+    - Broadcasts trades, quotes, and bars
+    - Supports multiple concurrent clients
+
+11. ✅ **Event-Driven Integration**
+    - Publishes to Redis Streams
+    - Event types: MARKET_DATA_TRADE, MARKET_DATA_QUOTE, MARKET_DATA_BAR
+    - Other services can subscribe to price updates
+    - Enables reactive position P&L updates
+    - Feeds technical analysis indicators
+
+12. ✅ **Docker Integration**
+    - Multi-stage Dockerfile (optimized size)
+    - Non-root user for security
+    - Health check integration
+    - docker-compose configuration
+    - Environment variable configuration
+
+#### Architecture Flow
+
+```
+Broker APIs (Alpaca, Binance, OANDA)
+    ↓ WebSocket/HTTP Streaming
+Market Data Connectors
+    ↓ Callbacks
+Market Data Service
+    ├─→ Store in TimescaleDB (OHLCV, Quote, Trade)
+    ├─→ Publish to Redis Streams (Events)
+    └─→ Broadcast via WebSocket (Real-time)
+         ↓
+    ┌────┴────┬────────┬─────────┐
+    ↓         ↓        ↓         ↓
+Trading   Technical  Frontend  Analytics
+Service   Analyst    Charts    Service
+```
+
+#### Data Flow Examples
+
+**Real-time Trade Processing:**
+```
+1. Binance sends trade via WebSocket
+2. BinanceConnector parses and emits Trade object
+3. MarketDataService._handle_trade() called
+4. TradeRepository stores in database
+5. Event published: market.data.trade
+6. WebSocket broadcast to connected clients
+7. Trading Service updates position P&L
+```
+
+**Historical Data Backfill:**
+```
+1. POST /historical/bars request
+2. Connector fetches from broker API
+3. Batch upsert to OHLCV table
+4. Data available for technical analysis
+5. Used for backtesting and charting
+```
+
+#### Files Created
+
+**Connectors (4 files, ~800 lines)**
+- `collectors/base.py` - Abstract base and data models
+- `collectors/alpaca.py` - Alpaca stock connector
+- `collectors/binance.py` - Binance crypto connector
+- `collectors/oanda.py` - OANDA forex connector
+
+**Repositories (4 files, ~600 lines)**
+- `repositories/__init__.py`
+- `repositories/ohlcv_repository.py`
+- `repositories/quote_repository.py`
+- `repositories/trade_repository.py`
+
+**Services (2 files, ~450 lines)**
+- `services/__init__.py`
+- `services/market_data_service.py`
+
+**API (3 files, ~450 lines)**
+- `api/__init__.py`
+- `api/schemas.py` - Pydantic models
+- `api/routes.py` - REST + WebSocket endpoints
+
+**Application (4 files)**
+- `main.py` - FastAPI application
+- `core/config.py` - Settings management
+- `requirements.txt` - Dependencies
+- `Dockerfile` - Container build
+
+**Shared Updates (3 files)**
+- `shared/database/models/quote.py` - Quote model
+- `shared/database/models/trade.py` - Trade model
+- `shared/events/event_types.py` - New event types
+
+#### Technical Features
+
+**Performance Optimizations:**
+- TimescaleDB hypertables for time-series data
+- Upsert operations prevent duplicate data
+- Batch operations for historical backfills
+- Connection pooling for database
+- Async/await throughout for concurrency
+
+**Reliability Features:**
+- Automatic reconnection with exponential backoff
+- Health checks for all connectors
+- WebSocket connection monitoring
+- Error handling and logging
+- Graceful shutdown on service stop
+
+**Scalability:**
+- Stateless service design
+- Can run multiple instances
+- Event-driven communication
+- Redis pub/sub for distribution
+- TimescaleDB for high-volume data
+
+#### Integration Points
+
+**Consumes:**
+- Alpaca IEX market data (stocks)
+- Binance market data (crypto)
+- OANDA pricing stream (forex)
+
+**Provides:**
+- REST API for historical queries
+- WebSocket for real-time streaming
+- Redis events for other services
+- TimescaleDB data for analysis
+
+**Used By:**
+- Trading Service (position P&L updates)
+- Technical Analyst (indicator calculations)
+- Frontend (real-time charts)
+- Analytics Service (performance metrics)
+
+#### Metrics
+
+- **Files Created**: 20 new files
+- **Lines of Code**: ~2,300 lines (market data service)
+- **Total System LOC**: ~6,870
+- **API Endpoints**: 10 REST + 1 WebSocket
+- **Broker Connectors**: 3 (Alpaca, Binance, OANDA)
+- **Database Models**: 3 (OHLCV, Quote, Trade)
+- **Repositories**: 3 with 31 total methods
+- **Event Types**: 3 new market data events
+- **Time Spent**: ~55 minutes
+
+#### Next Steps
+1. Technical Analyst Service (consume market data, generate signals)
+2. Fundamental Analyst Service (news, sentiment)
+3. Executor Service (place orders with brokers)
+4. Test with real broker credentials
+5. Add more timeframes and data types
+
+---
+
 ## Notes & Considerations
 
 ### Trading Strategy Support

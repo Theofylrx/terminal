@@ -17,6 +17,9 @@ class EventType(str, Enum):
     MARKET_DATA_CANDLE = "market.data.{symbol}.{timeframe}"
     MARKET_DATA_ORDERBOOK = "market.data.{symbol}.orderbook"
     MARKET_DATA_TRADES = "market.data.{symbol}.trades"
+    MARKET_DATA_TRADE = "market.data.trade"
+    MARKET_DATA_QUOTE = "market.data.quote"
+    MARKET_DATA_BAR = "market.data.bar"
 
     # ========== TECHNICAL ANALYSIS EVENTS ==========
     TECHNICAL_SIGNAL_GENERATED = "analysis.technical.{symbol}.signal"

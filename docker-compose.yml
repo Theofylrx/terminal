@@ -201,30 +201,47 @@ services:
 
   # ==================== TRADING AGENTS ====================
 
-  # market-data-service:
-  #   build:
-  #     context: .
-  #     dockerfile: agents/market-data-service/Dockerfile
-  #   container_name: terminal-market-data
-  #   environment:
-  #     - DATABASE_URL=${DATABASE_URL}
-  #     - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
-  #     - ALPACA_API_KEY=${ALPACA_API_KEY}
-  #     - ALPACA_API_SECRET=${ALPACA_API_SECRET}
-  #     - BINANCE_API_KEY=${BINANCE_API_KEY}
-  #     - BINANCE_API_SECRET=${BINANCE_API_SECRET}
-  #     - OANDA_API_KEY=${OANDA_API_KEY}
-  #     - ENVIRONMENT=${ENVIRONMENT:-development}
-  #   depends_on:
-  #     - postgres
-  #     - redis
-  #     - rabbitmq
-  #   volumes:
-  #     - ./agents/market-data-service:/app
-  #     - ./shared:/shared:ro
-  #   networks:
-  #     - terminal_network
-  #   restart: unless-stopped
+  market-data-service:
+    build:
+      context: .
+      dockerfile: agents/market-data-service/Dockerfile
+    container_name: terminal-market-data
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-trading_user}:${DB_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-terminal_db}
+      - REDIS_URL=redis://redis:6379/0
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      # Alpaca (stocks)
+      - ENABLE_ALPACA=${ENABLE_ALPACA:-false}
+      - ALPACA_API_KEY=${ALPACA_API_KEY:-}
+      - ALPACA_API_SECRET=${ALPACA_API_SECRET:-}
+      # Binance (crypto)
+      - ENABLE_BINANCE=${ENABLE_BINANCE:-false}
+      - BINANCE_API_KEY=${BINANCE_API_KEY:-}
+      - BINANCE_API_SECRET=${BINANCE_API_SECRET:-}
+      - BINANCE_TESTNET=${BINANCE_TESTNET:-true}
+      # OANDA (forex)
+      - ENABLE_OANDA=${ENABLE_OANDA:-false}
+      - OANDA_API_KEY=${OANDA_API_KEY:-}
+      - OANDA_ACCOUNT_ID=${OANDA_ACCOUNT_ID:-}
+    ports:
+      - "8003:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./agents/market-data-service:/app/agents/market-data-service:ro
+      - ./shared:/app/shared:ro
+    networks:
+      - terminal_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # technical-analyst-service:
   #   build:
