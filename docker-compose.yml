@@ -243,26 +243,42 @@ services:
       timeout: 10s
       retries: 3
 
-  # technical-analyst-service:
-  #   build:
-  #     context: .
-  #     dockerfile: agents/technical-analyst-service/Dockerfile
-  #   container_name: terminal-technical-analyst
-  #   environment:
-  #     - DATABASE_URL=${DATABASE_URL}
-  #     - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
-  #     - ENVIRONMENT=${ENVIRONMENT:-development}
-  #   depends_on:
-  #     - postgres
-  #     - redis
-  #     - rabbitmq
-  #   volumes:
-  #     - ./agents/technical-analyst-service:/app
-  #     - ./shared:/shared:ro
-  #   networks:
-  #     - terminal_network
-  #   restart: unless-stopped
-  #   # Can scale: docker-compose up -d --scale technical-analyst-service=3
+  technical-analyst-service:
+    build:
+      context: .
+      dockerfile: agents/technical-analyst-service/Dockerfile
+    container_name: terminal-technical-analyst
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-trading_user}:${DB_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-terminal_db}
+      - REDIS_URL=redis://redis:6379/0
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      # Indicator parameters
+      - RSI_PERIOD=${RSI_PERIOD:-14}
+      - MACD_FAST=${MACD_FAST:-12}
+      - MACD_SLOW=${MACD_SLOW:-26}
+      - MIN_CONFIDENCE=${MIN_CONFIDENCE:-60.0}
+    ports:
+      - "8004:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      market-data-service:
+        condition: service_healthy
+    volumes:
+      - ./agents/technical-analyst-service:/app/agents/technical-analyst-service:ro
+      - ./shared:/app/shared:ro
+    networks:
+      - terminal_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    # Can scale: docker-compose up -d --scale technical-analyst-service=3
 
   # ==================== FRONTEND ====================
 

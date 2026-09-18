@@ -1,0 +1,1 @@
+"""Technical Analyst Service API."""

@@ -6,6 +6,7 @@ from .order import Order
 from .ohlcv import OHLCV
 from .quote import Quote
 from .trade import Trade
+from .signal import Signal
 from .user import User
 
 __all__ = [
@@ -15,5 +16,6 @@ __all__ = [
     "OHLCV",
     "Quote",
     "Trade",
+    "Signal",
     "User"
 ]
