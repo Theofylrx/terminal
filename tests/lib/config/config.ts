@@ -1,8 +1,8 @@
 import dotenv from 'dotenv';
 import path from 'path';
 
-// Load environment variables
-dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
+// Load environment variables from tests/.env
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 /**
  * Configuration for Terminal Trading System Tests

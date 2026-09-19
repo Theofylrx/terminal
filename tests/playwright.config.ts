@@ -21,7 +21,7 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
  * - npm run test:all - All tests
  */
 
-const outputDir = './test-results/';
+const outputDir = './test-results/artifacts';
 
 export default defineConfig({
   testDir: './specs',
@@ -179,19 +179,13 @@ export default defineConfig({
   ],
 
   /* Run your local dev server before starting the tests */
-  webServer: process.env.CI ? undefined : [
-    {
-      command: 'cd ../agents/technical-analyst-service && python main.py',
-      url: 'http://localhost:8000/health',
-      timeout: 120 * 1000,
-      reuseExistingServer: !process.env.CI,
-    },
-    // Add more services as needed
-    // {
-    //   command: 'cd ../frontend && npm start',
-    //   url: 'http://localhost:3000',
-    //   timeout: 120 * 1000,
-    //   reuseExistingServer: !process.env.CI,
-    // },
-  ],
+  // webServer: Disabled for now - services need to be started manually
+  // webServer: process.env.CI ? undefined : [
+  //   {
+  //     command: 'cd ../agents/technical-analyst-service && python3 main.py',
+  //     url: 'http://localhost:8000/health',
+  //     timeout: 120 * 1000,
+  //     reuseExistingServer: !process.env.CI,
+  //   },
+  // ],
 });
