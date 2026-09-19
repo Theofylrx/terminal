@@ -22,6 +22,7 @@ from shared.database.connection import init_db
 
 from .core.config import settings
 from .api.routes import router
+from .api.auth_routes import router as auth_router
 
 
 # Configure logging
@@ -58,9 +59,101 @@ async def lifespan(app: FastAPI):
 # Create FastAPI app
 app = FastAPI(
     title="Technical Analyst Service",
-    description="Technical analysis and signal generation service",
-    version="1.0.0",
+    description="""
+## Technical Analysis & Signal Generation Service
+
+Enterprise-grade technical analysis service providing institutional-quality trading signals.
+
+### Features
+
+#### Technical Indicators (15 indicators)
+- **Trend**: EMA, SMA, MACD
+- **Momentum**: RSI, Stochastic, ROC
+- **Volatility**: Bollinger Bands, ATR, Standard Deviation
+- **Volume**: OBV, Volume SMA, VWAP
+
+#### Pattern Detection (10+ patterns)
+- **Candlestick Patterns**: Doji, Hammer, Shooting Star, Engulfing, Morning/Evening Star
+- **Chart Patterns**: Head & Shoulders, Double Top/Bottom, Triangles
+
+#### Advanced Institutional Patterns
+
+**Elliott Wave Analysis**
+- 5-wave impulse patterns with Fibonacci levels
+- Wave validation following Elliott Wave Theory rules
+- Fibonacci retracements (38.2%, 50%, 61.8%, 78.6%)
+- Fibonacci extensions (100%, 161.8%, 261.8%)
+
+**RSI Divergence Detection**
+- Regular Bullish/Bearish divergence (reversal signals)
+- Hidden Bullish/Bearish divergence (continuation signals)
+- Break of Structure (BOS) confirmation
+- Supply/Demand zone integration
+
+**Smart Money Concepts (SMC)**
+- Break of Structure (BOS) detection
+- Change of Character (CHoCH) identification
+- Fair Value Gaps (FVG) - price imbalances
+- Supply/Demand zones
+- Order blocks
+- Premium/Discount zones
+
+### Signal Generation
+Combines all indicators and patterns to generate high-confidence trading signals with:
+- Entry price and confidence score
+- Target price and stop loss levels
+- Risk/reward ratio
+- Detailed reasoning with pattern confluence
+- Multi-timeframe support
+
+### Endpoints
+- **Signals**: Generate and retrieve trading signals
+- **Indicators**: Get technical indicator values
+- **Elliott Wave**: Detect Elliott Wave patterns
+- **Divergences**: Detect RSI divergences
+- **Smart Money**: Detect institutional patterns
+    """,
+    version="2.0.0",
     lifespan=lifespan,
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_tags=[
+        {
+            "name": "health",
+            "description": "Health check and service status"
+        },
+        {
+            "name": "auth",
+            "description": "User authentication (login, register, profile)"
+        },
+        {
+            "name": "signals",
+            "description": "Trading signal generation and retrieval"
+        },
+        {
+            "name": "indicators",
+            "description": "Technical indicator calculations"
+        },
+        {
+            "name": "elliott-wave",
+            "description": "Elliott Wave pattern detection with Fibonacci levels"
+        },
+        {
+            "name": "divergences",
+            "description": "RSI divergence detection with Break of Structure confirmation"
+        },
+        {
+            "name": "smart-money",
+            "description": "Smart Money Concepts (BOS, FVG, Supply/Demand)"
+        },
+    ],
+    contact={
+        "name": "Terminal Development Team",
+        "email": "dev@terminal.ai",
+    },
+    license_info={
+        "name": "Proprietary",
+    },
 )
 
 # CORS middleware
@@ -73,6 +166,7 @@ app.add_middleware(
 )
 
 # Include API routes
+app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
 app.include_router(router, prefix="/api/v1", tags=["technical-analyst"])
 
 # Prometheus metrics

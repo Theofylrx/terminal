@@ -1,6 +1,7 @@
 """Trading Signal Model."""
 
-from sqlalchemy import Column, String, Float, DateTime, Text, Index, Enum as SQLEnum
+from sqlalchemy import Column, String, Float, DateTime, Text, Index, Enum as SQLEnum, ForeignKey
+from sqlalchemy.orm import relationship
 from enum import Enum
 from datetime import datetime
 
@@ -33,6 +34,9 @@ class Signal(BaseModel):
 
     __tablename__ = "signals"
 
+    # User ownership - CRITICAL for multi-user isolation
+    user_id = Column(String(36), nullable=False, index=True)
+
     # Signal details
     symbol = Column(String(20), nullable=False, index=True)
     timeframe = Column(String(10), nullable=False)
@@ -55,9 +59,16 @@ class Signal(BaseModel):
     expires_at = Column(DateTime, nullable=True)
     executed_at = Column(DateTime, nullable=True)
 
-    # Indexes
+    # Link to trading decision (optional - signal can exist without decision)
+    trading_decision_id = Column(String(36), ForeignKey('trading_decisions.id'), nullable=True)
+
+    # Relationship
+    trading_decision = relationship("TradingDecision", back_populates="signals")
+
+    # Indexes - IMPORTANT: user_id must be first for query performance
     __table_args__ = (
-        Index('idx_signal_symbol_timeframe', 'symbol', 'timeframe'),
+        Index('idx_signal_user_id', 'user_id'),
+        Index('idx_signal_user_symbol_timeframe', 'user_id', 'symbol', 'timeframe'),
         Index('idx_signal_status', 'status'),
         Index('idx_signal_generated_at', 'generated_at'),
     )
@@ -66,6 +77,7 @@ class Signal(BaseModel):
         """Convert to dictionary."""
         return {
             "id": str(self.id),
+            "user_id": str(self.user_id),
             "symbol": self.symbol,
             "timeframe": self.timeframe,
             "signal_type": self.signal_type.value if self.signal_type else None,
@@ -77,6 +89,7 @@ class Signal(BaseModel):
             "confidence": self.confidence,
             "strategy": self.strategy,
             "description": self.description,
+            "trading_decision_id": str(self.trading_decision_id) if self.trading_decision_id else None,
             "generated_at": self.generated_at.isoformat() if self.generated_at else None,
             "expires_at": self.expires_at.isoformat() if self.expires_at else None,
             "executed_at": self.executed_at.isoformat() if self.executed_at else None,

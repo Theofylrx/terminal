@@ -15,6 +15,9 @@ from shared.database.models.signal import Signal, SignalType, SignalStatus
 from ..indicators.calculator import IndicatorCalculator
 from ..patterns.detector import PatternDetector
 from ..patterns.models import PatternSignal
+from ..patterns.elliott_wave import ElliottWaveDetector
+from ..patterns.divergence import RSIDivergenceDetector
+from ..patterns.smart_money import SmartMoneyConceptsDetector
 from ..core.config import settings
 
 
@@ -33,6 +36,9 @@ class SignalGenerator:
         """Initialize signal generator."""
         self.indicator_calc = IndicatorCalculator()
         self.pattern_detector = PatternDetector()
+        self.elliott_wave_detector = ElliottWaveDetector()
+        self.divergence_detector = RSIDivergenceDetector()
+        self.smc_detector = SmartMoneyConceptsDetector()
 
     async def generate_signal(
         self,
@@ -59,11 +65,62 @@ class SignalGenerator:
             # Calculate indicators
             indicators = self._calculate_indicators(df)
 
-            # Detect patterns
+            # Detect candlestick and chart patterns
             patterns = self.pattern_detector.scan_patterns(df, symbol, timeframe)
 
-            # Generate signal from indicators and patterns
-            signal = self._combine_signals(symbol, timeframe, df, indicators, patterns)
+            # Detect Elliott Wave patterns (all types)
+            elliott_wave_bullish = self.elliott_wave_detector.detect_impulse_wave(df, is_bullish=True)
+            elliott_wave_bearish = self.elliott_wave_detector.detect_impulse_wave(df, is_bullish=False)
+
+            # Detect Leading Diagonal (Wave 1 or A)
+            leading_diagonal_bullish = self.elliott_wave_detector.detect_leading_diagonal(df, is_bullish=True)
+            leading_diagonal_bearish = self.elliott_wave_detector.detect_leading_diagonal(df, is_bullish=False)
+
+            # Detect Ending Diagonal (Wave 5 or C) - high-value reversal signal
+            ending_diagonal_bullish = self.elliott_wave_detector.detect_ending_diagonal(df, is_bullish=True)
+            ending_diagonal_bearish = self.elliott_wave_detector.detect_ending_diagonal(df, is_bullish=False)
+
+            # Detect Corrections (Zig-Zag, Flat, Triangle)
+            zigzag_correction = self.elliott_wave_detector.detect_zigzag_correction(df, is_bullish=False)
+            flat_correction = self.elliott_wave_detector.detect_flat_correction(df, is_bullish=False)
+            triangle_pattern = self.elliott_wave_detector.detect_triangle_pattern(df, is_bullish=False)
+
+            # Detect RSI divergences
+            rsi_series = self.indicator_calc.calculate_rsi(df['close'], settings.RSI_PERIOD)
+            divergences = self.divergence_detector.detect_all_divergences(df, rsi_series)
+
+            # Detect Smart Money Concepts (All 14 Patterns)
+
+            # Core 6 patterns
+            structure_breaks = self.smc_detector.detect_break_of_structure(df)
+            fvgs = self.smc_detector.detect_fair_value_gaps(df)
+            supply_demand_zones = self.smc_detector.detect_supply_demand_zones(df)
+            order_blocks = self.smc_detector.detect_order_blocks(df)
+            liquidity_sweeps = self.smc_detector.detect_liquidity_sweeps(df)
+
+            # New 8 patterns
+            equal_highs_lows = self.smc_detector.detect_equal_highs_lows(df)
+            order_flow = self.smc_detector.detect_order_flow(df)
+            institutional_funding_candles = self.smc_detector.detect_institutional_funding_candles(df)
+            false_bos = self.smc_detector.detect_false_break_of_structure(df)
+            session_liquidity = self.smc_detector.detect_session_liquidity(df)
+            daily_liquidity = self.smc_detector.detect_daily_liquidity(df)
+            smart_money_traps = self.smc_detector.detect_smart_money_trap(df)
+            inducements = self.smc_detector.detect_inducement(df)
+
+            # Generate signal from all analysis
+            signal = self._combine_signals(
+                symbol, timeframe, df, indicators, patterns,
+                elliott_wave_bullish, elliott_wave_bearish,
+                leading_diagonal_bullish, leading_diagonal_bearish,
+                ending_diagonal_bullish, ending_diagonal_bearish,
+                zigzag_correction, flat_correction, triangle_pattern,
+                divergences, structure_breaks, fvgs, supply_demand_zones,
+                order_blocks, liquidity_sweeps,
+                equal_highs_lows, order_flow, institutional_funding_candles,
+                false_bos, session_liquidity, daily_liquidity,
+                smart_money_traps, inducements
+            )
 
             return signal
 
@@ -124,6 +181,29 @@ class SignalGenerator:
         df: pd.DataFrame,
         indicators: dict,
         patterns: list,
+        elliott_wave_bullish,
+        elliott_wave_bearish,
+        leading_diagonal_bullish,
+        leading_diagonal_bearish,
+        ending_diagonal_bullish,
+        ending_diagonal_bearish,
+        zigzag_correction,
+        flat_correction,
+        triangle_pattern,
+        divergences: list,
+        structure_breaks: list,
+        fvgs: list,
+        supply_demand_zones: list,
+        order_blocks: list,
+        liquidity_sweeps: list,
+        equal_highs_lows: list,
+        order_flow: list,
+        institutional_funding_candles: list,
+        false_bos: list,
+        session_liquidity: list,
+        daily_liquidity: dict,
+        smart_money_traps: list,
+        inducements: list,
     ) -> Optional[Signal]:
         """
         Combine indicator and pattern signals to generate final signal.
@@ -182,7 +262,7 @@ class SignalGenerator:
                 bearish_score += 10
                 reasons.append("EMA 9 below EMA 21 (bearish trend)")
 
-        # Pattern signals
+        # Candlestick & Chart pattern signals
         for pattern in patterns:
             if pattern.signal == PatternSignal.BULLISH:
                 bullish_score += pattern.confidence * 0.3  # 30% weight
@@ -190,6 +270,304 @@ class SignalGenerator:
             elif pattern.signal == PatternSignal.BEARISH:
                 bearish_score += pattern.confidence * 0.3
                 reasons.append(f"{pattern.pattern_type.value} pattern (bearish)")
+
+        # Elliott Wave Impulse signals (HIGHEST PRIORITY - 25 points)
+        if elliott_wave_bullish and elliott_wave_bullish.confidence > 70:
+            wave_num = elliott_wave_bullish.current_wave
+            score_add = 30 if elliott_wave_bullish.extended_wave == 3 else 25
+            bullish_score += score_add
+            ext_info = f", Wave {elliott_wave_bullish.extended_wave} extended" if elliott_wave_bullish.extended_wave else ""
+            trunc_info = " (truncated)" if elliott_wave_bullish.is_truncated else ""
+            reasons.append(f"Elliott Wave bullish impulse (Wave {wave_num}{ext_info}{trunc_info}, {elliott_wave_bullish.confidence:.0f}% confidence)")
+
+        if elliott_wave_bearish and elliott_wave_bearish.confidence > 70:
+            wave_num = elliott_wave_bearish.current_wave
+            score_add = 30 if elliott_wave_bearish.extended_wave == 3 else 25
+            bearish_score += score_add
+            ext_info = f", Wave {elliott_wave_bearish.extended_wave} extended" if elliott_wave_bearish.extended_wave else ""
+            trunc_info = " (truncated)" if elliott_wave_bearish.is_truncated else ""
+            reasons.append(f"Elliott Wave bearish impulse (Wave {wave_num}{ext_info}{trunc_info}, {elliott_wave_bearish.confidence:.0f}% confidence)")
+
+        # Leading Diagonal signals (HIGH PRIORITY - 20 points) - Trend start
+        if leading_diagonal_bullish and leading_diagonal_bullish.confidence > 60:
+            bullish_score += 20
+            reasons.append(f"Leading Diagonal bullish (Wave {leading_diagonal_bullish.current_wave}, {leading_diagonal_bullish.confidence:.0f}% confidence)")
+
+        if leading_diagonal_bearish and leading_diagonal_bearish.confidence > 60:
+            bearish_score += 20
+            reasons.append(f"Leading Diagonal bearish (Wave {leading_diagonal_bearish.current_wave}, {leading_diagonal_bearish.confidence:.0f}% confidence)")
+
+        # Ending Diagonal signals (VERY HIGH PRIORITY - 30 points) - Trend exhaustion/reversal
+        if ending_diagonal_bullish and ending_diagonal_bullish.confidence > 60:
+            bearish_score += 30  # Ending diagonal bullish = trend exhaustion, expect reversal down
+            reasons.append(f"Ending Diagonal exhaustion (bullish trend ending, {ending_diagonal_bullish.confidence:.0f}% confidence)")
+
+        if ending_diagonal_bearish and ending_diagonal_bearish.confidence > 60:
+            bullish_score += 30  # Ending diagonal bearish = trend exhaustion, expect reversal up
+            reasons.append(f"Ending Diagonal exhaustion (bearish trend ending, {ending_diagonal_bearish.confidence:.0f}% confidence)")
+
+        # Correction patterns (MEDIUM PRIORITY - 10-15 points) - Helps identify pullbacks
+        if zigzag_correction and zigzag_correction.confidence > 50:
+            # Zig-zag suggests sharp correction, look for continuation after
+            if zigzag_correction.direction == 'bullish':
+                bullish_score += 12
+                reasons.append(f"Zig-Zag correction (bullish, Wave {chr(65 + zigzag_correction.current_wave)})")
+            else:
+                bearish_score += 12
+                reasons.append(f"Zig-Zag correction (bearish, Wave {chr(65 + zigzag_correction.current_wave)})")
+
+        if flat_correction and flat_correction.confidence > 50:
+            # Flat suggests sideways consolidation
+            score_add = 15 if flat_correction.subtype == 'expanded_flat' else 10
+            if flat_correction.direction == 'bullish':
+                bullish_score += score_add
+                reasons.append(f"Flat correction ({flat_correction.subtype}, Wave {chr(65 + flat_correction.current_wave)})")
+            else:
+                bearish_score += score_add
+                reasons.append(f"Flat correction ({flat_correction.subtype}, Wave {chr(65 + flat_correction.current_wave)})")
+
+        if triangle_pattern and triangle_pattern.confidence > 50:
+            # Triangle suggests continuation after Wave E completes
+            score_add = 15 if triangle_pattern.current_wave >= 4 else 10
+            if triangle_pattern.direction == 'bullish':
+                bullish_score += score_add
+                reasons.append(f"Triangle pattern ({triangle_pattern.subtype}, Wave {chr(65 + triangle_pattern.current_wave)})")
+            else:
+                bearish_score += score_add
+                reasons.append(f"Triangle pattern ({triangle_pattern.subtype}, Wave {chr(65 + triangle_pattern.current_wave)})")
+
+        # RSI Divergence signals (VERY HIGH PRIORITY - 20-30 points)
+        if divergences:
+            latest_div = divergences[0]  # Most recent divergence
+            if latest_div.is_bullish:
+                score_add = 30 if latest_div.confirmed else 20
+                bullish_score += score_add
+                reasons.append(f"{latest_div.divergence_type.value} ({'confirmed' if latest_div.confirmed else 'unconfirmed'})")
+            else:
+                score_add = 30 if latest_div.confirmed else 20
+                bearish_score += score_add
+                reasons.append(f"{latest_div.divergence_type.value} ({'confirmed' if latest_div.confirmed else 'unconfirmed'})")
+
+        # Smart Money Concepts - Break of Structure (HIGH PRIORITY - 15 points)
+        if structure_breaks:
+            latest_bos = structure_breaks[-1]  # Most recent
+            if latest_bos.is_bullish:
+                score_add = 20 if latest_bos.volume_confirmation else 15
+                bullish_score += score_add
+                reasons.append(f"{latest_bos.structure_type.value} ({latest_bos.strength:.1f}% break)")
+            else:
+                score_add = 20 if latest_bos.volume_confirmation else 15
+                bearish_score += score_add
+                reasons.append(f"{latest_bos.structure_type.value} ({latest_bos.strength:.1f}% break)")
+
+        # Fair Value Gaps (MEDIUM PRIORITY - 10 points)
+        unfilled_fvgs = [fvg for fvg in fvgs if not fvg.filled]
+        if unfilled_fvgs:
+            latest_fvg = unfilled_fvgs[-1]
+            if latest_fvg.direction == 'bullish':
+                bullish_score += 10
+                reasons.append(f"Bullish FVG unfilled (${latest_fvg.gap_low:.2f}-${latest_fvg.gap_high:.2f})")
+            else:
+                bearish_score += 10
+                reasons.append(f"Bearish FVG unfilled (${latest_fvg.gap_low:.2f}-${latest_fvg.gap_high:.2f})")
+
+        # Supply/Demand Zones (MEDIUM PRIORITY - 10 points)
+        active_zones = [zone for zone in supply_demand_zones if zone.active and zone.touches >= 2]
+        if active_zones:
+            # Check if current price is near any strong zone
+            current_price = df['close'].iloc[-1]
+            for zone in active_zones:
+                if zone.zone_low <= current_price <= zone.zone_high:
+                    if zone.is_supply:
+                        bearish_score += 15
+                        reasons.append(f"At Supply Zone (${zone.zone_low:.2f}-${zone.zone_high:.2f}, {zone.touches} touches)")
+                    else:
+                        bullish_score += 15
+                        reasons.append(f"At Demand Zone (${zone.zone_low:.2f}-${zone.zone_high:.2f}, {zone.touches} touches)")
+
+        # Order Blocks (HIGH PRIORITY - 15-20 points) - Institutional entry zones
+        if order_blocks:
+            current_price = df['close'].iloc[-1]
+            for ob in order_blocks:
+                # Check if price is at or near order block (within zone)
+                if ob.zone_low <= current_price <= ob.zone_high:
+                    score_add = 20 if ob.strength > 0.7 else 15
+                    if not ob.is_supply:  # Bullish order block (demand)
+                        bullish_score += score_add
+                        reasons.append(f"At Bullish Order Block (${ob.zone_low:.2f}-${ob.zone_high:.2f}, {ob.strength:.0%} strength)")
+                    else:  # Bearish order block (supply)
+                        bearish_score += score_add
+                        reasons.append(f"At Bearish Order Block (${ob.zone_low:.2f}-${ob.zone_high:.2f}, {ob.strength:.0%} strength)")
+
+        # Liquidity Sweeps (VERY HIGH PRIORITY - 20-25 points) - Stop hunts before reversal
+        if liquidity_sweeps:
+            latest_sweep = liquidity_sweeps[-1]  # Most recent sweep
+            # Check if sweep is recent (within last 5 candles)
+            current_idx = len(df) - 1
+            if current_idx - latest_sweep['idx'] <= 5:
+                if latest_sweep['type'] == 'bullish_sweep':
+                    bullish_score += 25
+                    reasons.append(f"Recent Bullish Liquidity Sweep above ${latest_sweep['sweep_level']:.2f}")
+                else:  # bearish_sweep
+                    bearish_score += 25
+                    reasons.append(f"Recent Bearish Liquidity Sweep below ${latest_sweep['sweep_level']:.2f}")
+
+        # Equal Highs/Lows (CRITICAL - 30-40 points) - Major liquidity pools
+        if equal_highs_lows:
+            current_price = df['close'].iloc[-1]
+            for eq in equal_highs_lows:
+                # High value if price is at level or if level was recently swept
+                tolerance_range = eq.level * 0.005  # 0.5% range
+                at_level = abs(current_price - eq.level) <= tolerance_range
+
+                if eq.swept and eq.sweep_idx is not None:
+                    # Check if sweep is recent
+                    if len(df) - int(eq.sweep_idx) <= 5:
+                        score_add = 40  # Very high confidence on sweep
+                        if eq.is_equal_highs:
+                            bullish_score += score_add
+                            reasons.append(f"Equal Highs ${eq.level:.2f} swept (bearish reversal signal)")
+                        else:  # equal_lows
+                            bearish_score += score_add
+                            reasons.append(f"Equal Lows ${eq.level:.2f} swept (bullish reversal signal)")
+                elif at_level:
+                    # Price approaching un-swept EQH/EQL
+                    score_add = 30
+                    if eq.is_equal_highs:
+                        bearish_score += score_add  # EQH acts as resistance
+                        reasons.append(f"At Equal Highs ${eq.level:.2f} ({eq.count} touches)")
+                    else:
+                        bullish_score += score_add  # EQL acts as support
+                        reasons.append(f"At Equal Lows ${eq.level:.2f} ({eq.count} touches)")
+
+        # Order Flow (HIGH PRIORITY - 15-20 points) - General institutional zones
+        if order_flow:
+            current_price = df['close'].iloc[-1]
+            for of in order_flow:
+                if of.active and of.zone_low <= current_price <= of.zone_high:
+                    score_add = 20 if of.strength > 10 else 15  # Based on subsequent move strength
+                    if of.is_bullish:
+                        bullish_score += score_add
+                        reasons.append(f"At Bullish Order Flow zone (${of.zone_low:.2f}-${of.zone_high:.2f})")
+                    else:
+                        bearish_score += score_add
+                        reasons.append(f"At Bearish Order Flow zone (${of.zone_low:.2f}-${of.zone_high:.2f})")
+
+        # Institutional Funding Candles (VERY HIGH - 25-30 points) - Reversal candles
+        if institutional_funding_candles:
+            current_idx = len(df) - 1
+            for ifc in institutional_funding_candles:
+                # IFC is very high value if recent
+                if current_idx - ifc.candle_idx <= 3:
+                    score_add = 30 if ifc.reversal_confirmed else 25
+                    if ifc.is_bullish:
+                        bullish_score += score_add
+                        reasons.append(f"Bullish IFC: Swept ${ifc.swept_level:.2f}, reversal confirmed")
+                    else:
+                        bearish_score += score_add
+                        reasons.append(f"Bearish IFC: Swept ${ifc.swept_level:.2f}, reversal confirmed")
+
+        # False Break of Structure (HIGH - 25 points) - False signal filter / reversal
+        if false_bos:
+            current_idx = len(df) - 1
+            for fbos in false_bos:
+                # FBOS is high value if recent
+                if current_idx - fbos['invalidation_idx'] <= 5:
+                    if fbos['trap_signal'] == 'bullish':
+                        bullish_score += 25
+                        reasons.append(f"False Bearish BOS invalidated (bullish trap reversal)")
+                    else:  # bearish
+                        bearish_score += 25
+                        reasons.append(f"False Bullish BOS invalidated (bearish trap reversal)")
+
+        # Session Liquidity (HIGH - 25 points for intraday) - Asia/London/NY levels
+        if session_liquidity:
+            current_price = df['close'].iloc[-1]
+            # Check most recent session liquidity
+            for session in session_liquidity[-3:]:  # Last 3 sessions
+                tolerance = session.session_high * 0.002  # 0.2% tolerance
+
+                # High swept (bearish signal)
+                if session.high_swept and session.high_sweep_idx:
+                    sweep_recent = len(df) - int(session.high_sweep_idx) <= 5
+                    if sweep_recent:
+                        bullish_score += 25
+                        reasons.append(f"{session.session_name.title()} session high ${session.session_high:.2f} swept")
+
+                # Low swept (bullish signal)
+                if session.low_swept and session.low_sweep_idx:
+                    sweep_recent = len(df) - int(session.low_sweep_idx) <= 5
+                    if sweep_recent:
+                        bearish_score += 25
+                        reasons.append(f"{session.session_name.title()} session low ${session.session_low:.2f} swept")
+
+                # At session levels (not swept)
+                if not session.high_swept and abs(current_price - session.session_high) <= tolerance:
+                    bearish_score += 20
+                    reasons.append(f"At {session.session_name.title()} session high ${session.session_high:.2f}")
+
+                if not session.low_swept and abs(current_price - session.session_low) <= tolerance:
+                    bullish_score += 20
+                    reasons.append(f"At {session.session_name.title()} session low ${session.session_low:.2f}")
+
+        # Daily Liquidity (HIGH - 20-30 points for swing) - PDH/PDL, PWH/PWL
+        if daily_liquidity:
+            current_price = df['close'].iloc[-1]
+            tolerance = current_price * 0.003  # 0.3% tolerance
+
+            # PDH (Previous Day High) - resistance
+            if 'pdh' in daily_liquidity:
+                pdh = daily_liquidity['pdh']
+                if abs(current_price - pdh) <= tolerance:
+                    bearish_score += 20
+                    reasons.append(f"At Previous Day High ${pdh:.2f}")
+
+            # PDL (Previous Day Low) - support
+            if 'pdl' in daily_liquidity:
+                pdl = daily_liquidity['pdl']
+                if abs(current_price - pdl) <= tolerance:
+                    bullish_score += 20
+                    reasons.append(f"At Previous Day Low ${pdl:.2f}")
+
+            # PWH (Previous Week High) - stronger resistance
+            if 'pwh' in daily_liquidity:
+                pwh = daily_liquidity['pwh']
+                if abs(current_price - pwh) <= tolerance:
+                    bearish_score += 30
+                    reasons.append(f"At Previous Week High ${pwh:.2f}")
+
+            # PWL (Previous Week Low) - stronger support
+            if 'pwl' in daily_liquidity:
+                pwl = daily_liquidity['pwl']
+                if abs(current_price - pwl) <= tolerance:
+                    bullish_score += 30
+                    reasons.append(f"At Previous Week Low ${pwl:.2f}")
+
+        # Smart Money Trap (HIGH - 20-25 points) - First pullback traps
+        if smart_money_traps:
+            current_idx = len(df) - 1
+            for smt in smart_money_traps:
+                # SMT is valuable if recent
+                if current_idx - smt['pullback_idx'] <= 5:
+                    if smt['signal'] == 'bullish':
+                        bullish_score += 25
+                        reasons.append(f"Bullish SMT: Bearish BOS trapped at ${smt['trap_level']:.2f}")
+                    else:
+                        bearish_score += 25
+                        reasons.append(f"Bearish SMT: Bullish BOS trapped at ${smt['trap_level']:.2f}")
+
+        # Inducement (MEDIUM-HIGH - 15-20 points) - Retail traps
+        if inducements:
+            current_idx = len(df) - 1
+            for idm in inducements:
+                # Inducement valuable if recent
+                if current_idx - idm['reversal_idx'] <= 5:
+                    if idm['signal'] == 'bullish':
+                        bullish_score += 20
+                        reasons.append(f"Bullish Inducement: Small bearish move trapped traders")
+                    else:
+                        bearish_score += 20
+                        reasons.append(f"Bearish Inducement: Small bullish move trapped traders")
 
         # Determine signal type and confidence
         if bullish_score > bearish_score and bullish_score >= settings.MIN_CONFIDENCE:

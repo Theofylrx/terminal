@@ -1,0 +1,80 @@
+{
+  "name": "@terminal/test-framework",
+  "version": "1.0.0",
+  "description": "Comprehensive test automation framework for Terminal Trading System - UI, API, and Database testing using Playwright and TypeScript",
+  "main": "dist/lib/index.js",
+  "types": "dist/lib/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "clean": "rm -rf dist test-results",
+    "prebuild": "npm run clean",
+    "test:ui": "npx playwright test --grep \"@ui\" --project=ui-chromium",
+    "test:ui:all-browsers": "npx playwright test --grep \"@ui\"",
+    "test:api": "npx playwright test --grep \"@api\" --project=api",
+    "test:api:auth": "npx playwright test --grep \"@api.*@auth\" --project=api",
+    "test:api:signals": "npx playwright test --grep \"@api.*@signals\" --project=api",
+    "test:api:trading": "npx playwright test --grep \"@api.*@trading\" --project=api",
+    "test:db": "npx playwright test --grep \"@database\" --project=database",
+    "test:db:models": "npx playwright test --grep \"@database.*@models\" --project=database",
+    "test:db:isolation": "npx playwright test --grep \"@database.*@isolation\" --project=database",
+    "test:e2e": "npx playwright test --grep \"@e2e\" --project=e2e-chromium",
+    "test:e2e:trading-flow": "npx playwright test --grep \"@e2e.*@trading\" --project=e2e-chromium",
+    "test:e2e:analysis-flow": "npx playwright test --grep \"@e2e.*@analysis\" --project=e2e-chromium",
+    "test:mobile": "npx playwright test --grep \"@mobile\"",
+    "test:critical": "npx playwright test --grep \"@critical\"",
+    "test:smoke": "npx playwright test --grep \"@smoke\"",
+    "test:all": "npx playwright test",
+    "test:debug": "npx playwright test --debug",
+    "test:ui:debug": "npx playwright test --grep \"@ui\" --debug",
+    "test:headed": "npx playwright test --headed",
+    "test:report": "npx playwright show-report test-results/html-report",
+    "db:start": "cd .. && docker-compose up -d postgres && echo '⏳ Waiting for PostgreSQL...' && sleep 5 && echo '✅ PostgreSQL ready!'",
+    "db:stop": "cd .. && docker-compose stop postgres",
+    "db:restart": "npm run db:stop && npm run db:start",
+    "db:connect": "PGPASSWORD=${DB_PASSWORD:-postgres} psql -h ${DB_HOST:-localhost} -p ${DB_PORT:-5432} -U ${DB_USER:-postgres} -d ${DB_NAME:-terminal}",
+    "db:seed": "ts-node lib/database/seed/seed.ts",
+    "db:clean": "ts-node lib/database/seed/clean.ts",
+    "services:start": "cd .. && docker-compose up -d",
+    "services:stop": "cd .. && docker-compose down",
+    "services:restart": "npm run services:stop && npm run services:start",
+    "services:logs": "cd .. && docker-compose logs -f",
+    "install:browsers": "npx playwright install --with-deps"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Theofylrx/terminal.git"
+  },
+  "keywords": [
+    "playwright",
+    "test-automation",
+    "qa",
+    "testing",
+    "ui-testing",
+    "api-testing",
+    "database-testing",
+    "e2e",
+    "typescript",
+    "page-object-model",
+    "trading-system",
+    "fastapi",
+    "react",
+    "postgresql"
+  ],
+  "author": "Likhobo Mvana",
+  "license": "ISC",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.47.0",
+    "@types/node": "^22.15.17",
+    "@types/pg": "^8.23.1",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "pg": "^8.13.1",
+    "zod": "^3.23.8",
+    "axios": "^1.7.7"
+  }
+}

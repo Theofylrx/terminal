@@ -1,0 +1,316 @@
+{
+  "meta": {
+    "description": "Example of complete TradingDecision stored in database and returned from API",
+    "use_case": "BTCUSD 4-timeframe analysis (15M, 1H, 4H, Daily) - Sept 2026",
+    "confidence": "98%",
+    "decision_id": "550e8400-e29b-41d4-a716-446655440000"
+  },
+
+  "trading_decision": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "symbol": "BTCUSD",
+    "action": "SELL",
+    "confidence": 0.98,
+    "confidence_level": "VERY_HIGH",
+    "should_trade": true,
+    "generated_at": "2026-09-19T12:35:00Z",
+    "expires_at": "2026-09-19T16:35:00Z",
+
+    "primary_arguments": [
+      {
+        "claim": "4-timeframe bearish alignment with institutional resistance at $81,000-$82,000",
+        "evidence": [
+          {
+            "source": "15M Timeframe",
+            "type": "SMC Pattern - Equal Highs",
+            "description": "Equal Highs at $81,350 with 5 rejections",
+            "score": 40.0,
+            "confidence": 0.90,
+            "timestamp": "2026-09-19T12:30:00Z"
+          },
+          {
+            "source": "15M Timeframe",
+            "type": "Technical Indicator - RSI",
+            "description": "RSI at 83.99 - extreme overbought",
+            "score": 25.0,
+            "confidence": 0.95,
+            "timestamp": "2026-09-19T12:30:00Z"
+          },
+          {
+            "source": "1H Timeframe",
+            "type": "SMC Pattern - Smart Money Trap",
+            "description": "3-day distribution phase trapping retail at $80,800-$81,200",
+            "score": 30.0,
+            "confidence": 0.90,
+            "timestamp": "2026-09-19T12:00:00Z"
+          },
+          {
+            "source": "4H Timeframe",
+            "type": "Elliott Wave",
+            "description": "Wave 5 completion at $82,000",
+            "score": 35.0,
+            "confidence": 0.85,
+            "timestamp": "2026-09-19T12:00:00Z"
+          },
+          {
+            "source": "Daily Timeframe",
+            "type": "SMC Pattern - Equal Highs",
+            "description": "Multi-week resistance at $81,000-$82,000",
+            "score": 45.0,
+            "confidence": 0.90,
+            "timestamp": "2026-09-19T00:00:00Z"
+          },
+          {
+            "source": "Daily Timeframe",
+            "type": "Technical Indicator - RSI Divergence",
+            "description": "Price making equal highs, RSI making lower highs (70 → 51)",
+            "score": 20.0,
+            "confidence": 0.85,
+            "timestamp": "2026-09-19T00:00:00Z"
+          }
+        ],
+        "reasoning": "EXTREMELY HIGH CONVICTION BEARISH SETUP:\n\n4-TIMEFRAME PERFECT ALIGNMENT:\nAll timeframes from 15M to Daily show bearish bias.\n\nINSTITUTIONAL RESISTANCE CONFIRMATION:\nThe $81,000-$82,000 zone appears on ALL timeframes:\n- 15M: $81,350 (5 rejections, RSI 84)\n- 1H: $81,350 (3-day distribution)\n- 4H: $81,000-82,000 (multiple rejections)\n- Daily: $81,000-82,000 (weeks of rejection)\n\nThis is MASSIVE institutional selling zone.\n\nELLIOTT WAVE STRUCTURE (All Timeframes):\nEvery timeframe shows Wave 5 completion:\n- Daily: Wave 5 from $60k (0.618 retracement)\n- 4H: Wave 5 from $62k\n- 1H: Wave 5 from $76k-78k\n- 15M: Wave 5 with extreme RSI\n\nWhen Wave 5 completes on ALL timeframes simultaneously,\na significant correction is VERY likely.\n\nRSI GRADIENT ANALYSIS:\n- 15M: 83.99 (EXTREME overbought)\n- 4H: 76.52 (overbought)\n- Daily: 50.91 (neutral but diverging)\n\nThis shows exhaustion at all timeframe levels.",
+        "confidence": 0.98,
+        "timeframe": null,
+        "evidence_count": 6,
+        "total_evidence_score": 195.0
+      }
+    ],
+
+    "counter_arguments": [
+      {
+        "claim": "4H trendline support at $78,000 could provide bounce",
+        "evidence": [
+          {
+            "source": "4H Timeframe",
+            "type": "Trendline Support",
+            "description": "Blue diagonal trendline from $62,000 low currently at $78,000",
+            "score": 15.0,
+            "confidence": 0.70,
+            "timestamp": "2026-09-19T12:00:00Z"
+          }
+        ],
+        "reasoning": "The 4H chart shows a strong uptrend trendline from the $62,000 low.\nThis trendline is currently at $78,000-$79,000.\n\nIf price drops to $78k, it will test this trendline.\nA bounce from the trendline could:\n1. Invalidate the short-term bearish setup\n2. Create a higher low (still bullish structure)\n3. Rally back to $80,000-$81,000\n\nMITIGATION:\n- Exit 75% of position by $78,250\n- Trail stop on remaining 25%\n- If strong bounce occurs, flip to long",
+        "confidence": 0.15,
+        "timeframe": "4H",
+        "evidence_count": 1,
+        "total_evidence_score": 15.0
+      }
+    ],
+
+    "fundamental_alignment": {
+      "direction": "NEUTRAL",
+      "strength": "WEAK",
+      "lag_assessment": "FUNDAMENTAL LAG: Not Applicable\n\nNo fundamental data available for Bitcoin (cryptocurrency).\n\nWhat this means:\n- Trade purely on technical analysis\n- Technical confluence is sufficient\n- Fundamentals would provide context but are not required for crypto",
+      "data": {
+        "technical_bias": "BEARISH",
+        "technical_confidence": 0.98,
+        "fundamental_bias": "NEUTRAL",
+        "fundamental_score": 0.0,
+        "aligned": false
+      },
+      "interpretation": "No fundamental data available. Proceed with technical analysis only.\n\nCryptocurrencies are primarily technical markets.\nThe 4-timeframe technical alignment provides sufficient conviction."
+    },
+
+    "risk_assessment": {
+      "primary_risks": [
+        "4H trendline support at $78,000 could create strong bounce (15% probability)",
+        "Bitcoin volatility could spike to $82,000 briefly before reversal (10% probability)",
+        "News event could override technical setup (5% probability)"
+      ],
+      "risk_level": "VERY_LOW",
+      "mitigation": "Risk Level: VERY_LOW\n\nMitigation Strategy:\n- Tight stop above $81,650 (above 4-TF resistance)\n- Exit 20% at $80,000 (move stop to breakeven)\n- Exit 20% at $79,000 (lock in profits)\n- Exit 35% at $78,250 (primary target, expect bounce)\n- Exit 25% at $75,000-$76,000 OR trail stop\n\nThis creates a risk-free trade after first target hit.\nMaximum loss: $450 per contract (~0.55%)\nExpected gain: $3,000+ per contract (3.7%+)\nRisk/Reward: 7:1",
+      "max_drawdown_estimate": 0.006,
+      "probability_of_loss": 0.02,
+      "upcoming_events": [],
+      "event_impact": "UNKNOWN"
+    },
+
+    "entry_plan": {
+      "entry_price": 81250.0,
+      "entry_reasoning": "Entry at current price: $81,250\n\nReasoning:\n- 4-timeframe bearish alignment confirmed (98% confidence)\n- All timeframes show same resistance ($81,000-$82,000)\n- Elliott Wave 5 complete on all timeframes\n- RSI extreme on 15M (83.99), overbought on 4H (76.52)\n- Failed liquidity sweep attempts on all timeframes\n- Smart Money Trap activated (retail trapped at highs)\n\nEntry NOW is optimal because:\n- Price at distribution zone\n- Extreme RSI unsustainable\n- Multi-week resistance confirmed\n- Tight stop above clear invalidation\n\nAlternative entry:\n- Conservative: Wait for break below $80,384 (1H CHoCH confirmation)\n- Ultra-conservative: Wait for break below $80,000",
+
+      "stop_loss": 81650.0,
+      "stop_reasoning": "Stop above 4-timeframe resistance at $81,650\n\nReasoning:\n- Above Equal Highs on all timeframes ($81,000-$82,000)\n- Above failed liquidity sweep attempts\n- Clear invalidation level\n- If price breaks above $81,650, the bearish setup is invalidated\n\nRisk: ~$400 per contract (0.49%)",
+
+      "targets": [
+        {
+          "price": 80000.0,
+          "reasoning": "Psychological level + minor support zone from 1H analysis",
+          "percent_exit": 20,
+          "probability": 0.95,
+          "timeframe_estimate": "2-6 hours"
+        },
+        {
+          "price": 79000.0,
+          "reasoning": "Order Block support + FVG zone from 1H/4H analysis",
+          "percent_exit": 20,
+          "probability": 0.90,
+          "timeframe_estimate": "6-12 hours"
+        },
+        {
+          "price": 78250.0,
+          "reasoning": "MULTI-TIMEFRAME SUPPORT:\n- 1H: Major Bullish Order Block (marked on chart)\n- 4H: Near trendline support (~$78k)\n- Daily: Support zone ($78-79k)\n\nEXPECT STRONG BOUNCE HERE - Exit 35% to lock in profits",
+          "percent_exit": 35,
+          "probability": 0.85,
+          "timeframe_estimate": "12-24 hours"
+        },
+        {
+          "price": 75500.0,
+          "reasoning": "4H major support (Orange box) + Daily demand zone\nOnly if $78k breaks quickly without bounce",
+          "percent_exit": 25,
+          "probability": 0.60,
+          "timeframe_estimate": "2-4 days"
+        }
+      ],
+
+      "risk_reward": 7.1,
+      "position_size_recommendation": 2.5,
+
+      "entry_trigger": "Enter when:\n- Current price at distribution zone ($81,200-$81,300)\n- RSI extreme on 15M (confirmed)\n- Multiple timeframe rejections at resistance (confirmed)\n- Elliott Wave 5 complete (confirmed)\n\nALL ENTRY CONDITIONS MET - ENTER IMMEDIATELY\n\nFor conservative traders:\n- Wait for 1H candle close below $80,384 (CHoCH confirmation)",
+
+      "invalidation": "Setup invalidated if:\n- Price closes above $81,650 on 1H timeframe\n- This would break above 4-timeframe resistance\n- New analysis required if invalidation occurs"
+    },
+
+    "timeframe_summary": {
+      "15M": {
+        "bias": "BEARISH",
+        "confidence": 0.87,
+        "bullish_score": 105.0,
+        "bearish_score": 220.0,
+        "net_score": -115.0,
+        "key_patterns": [
+          "Equal Highs at $81,350 (40 pts)",
+          "RSI 83.99 extreme overbought (25 pts)",
+          "Smart Money Trap active (25 pts)",
+          "Inducement pattern (20 pts)",
+          "Failed liquidity sweep (25 pts)"
+        ]
+      },
+      "1H": {
+        "bias": "BEARISH",
+        "confidence": 0.92,
+        "bullish_score": 95.0,
+        "bearish_score": 225.0,
+        "net_score": -130.0,
+        "key_patterns": [
+          "Equal Highs at $81,350 (40 pts)",
+          "3-day distribution phase (20 pts)",
+          "Smart Money Trap fully activated (30 pts)",
+          "Elliott Wave 5 complete (35 pts)",
+          "Bullish Order Block at $78,250 (20 pts support)"
+        ]
+      },
+      "4H": {
+        "bias": "BEARISH",
+        "confidence": 0.68,
+        "bullish_score": 160.0,
+        "bearish_score": 175.0,
+        "net_score": -15.0,
+        "key_patterns": [
+          "Equal Highs at $81,000-$82,000 (40 pts)",
+          "Elliott Wave 5 complete (35 pts)",
+          "RSI 76.52 overbought (20 pts)",
+          "Blue trendline support at $78,000 (15 pts bullish)",
+          "Multiple Bullish Order Blocks (60 pts support)"
+        ]
+      },
+      "Daily": {
+        "bias": "BEARISH",
+        "confidence": 0.75,
+        "bullish_score": 115.0,
+        "bearish_score": 240.0,
+        "net_score": -125.0,
+        "key_patterns": [
+          "Equal Highs at $81,000-$82,000 (45 pts)",
+          "Multi-week resistance zone (30 pts)",
+          "Elliott Wave 5 complete from $60k (40 pts)",
+          "RSI bearish divergence (20 pts)",
+          "Major support at $60,000-$65,000 (35 pts)"
+        ]
+      }
+    },
+
+    "confluence_percentage": 1.00,
+    "timeframe_agreement": "100% (4/4 timeframes BEARISH)",
+
+    "confidence_breakdown": {
+      "technical_confidence": 0.87,
+      "timeframe_agreement": 1.00,
+      "confluence_score": 1.00,
+      "multi_timeframe_boost": 0.11,
+      "final_confidence": 0.98
+    },
+
+    "executive_summary": "═══════════════════════════════════════════════════\nTRADING DECISION - BTCUSD (4-TIMEFRAME)\n═══════════════════════════════════════════════════\n\n⚡⚡⚡ URGENT: SELL / SHORT IMMEDIATELY ⚡⚡⚡\n\nACTION: SELL\nBIAS: BEARISH (ALL TIMEFRAMES)\nCONFIDENCE: 98% (EXTREMELY HIGH)\nCONFLUENCE: 100% (PERFECT 4-TF ALIGNMENT)\nRISK: VERY LOW (2% loss probability)\n\nPRIMARY THESIS:\n4-timeframe bearish alignment with institutional\nresistance at $81,000-$82,000 = imminent reversal\n\nKEY EVIDENCE:\n• Equal Highs at $81-82k on ALL 4 timeframes (165 pts) 🔥\n• Elliott Wave 5 complete on ALL timeframes (140 pts) 🔥\n• RSI extreme (15M: 84) + divergence (Daily) (65 pts) 🔥\n• Failed liquidity sweeps on all timeframes (115 pts) 🔥\n• Smart Money Trap activated - retail trapped (55 pts) 🔥\n\nTOTAL EVIDENCE: 540 POINTS BEARISH 🚨\n\nCOUNTER-ARGUMENTS:\n• 4H trendline support at $78k (15% probability)\n\nBOTTOM LINE:\nSELL NOW with VERY HIGH conviction (98%)\nThis is a TEXTBOOK 4-timeframe reversal setup\nAll timeframes agree - institutional distribution zone\n\n═══════════════════════════════════════════════════",
+
+    "detailed_reasoning": "=== MULTI-TIMEFRAME ANALYSIS ===\n\nEXTREMELY HIGH CONVICTION BEARISH SETUP:\n\n4-TIMEFRAME PERFECT ALIGNMENT:\nThis is what PROFESSIONAL institutional traders look for.\nWhen ALL timeframes from 15M to Daily agree, the probability\nof the setup playing out increases dramatically.\n\nCurrent Alignment:\n✓ 15M: BEARISH (entry timing, RSI 84 extreme)\n✓ 1H: BEARISH (short-term structure, 3-day distribution)\n✓ 4H: BEARISH (intermediate structure, Wave 5 top)\n✓ Daily: BEARISH (long-term structure, multi-week resistance)\n\nThis is a 100% BEARISH CONSENSUS across all timeframes.\n\n=== INSTITUTIONAL RESISTANCE CONFIRMATION ===\n\nThe $81,000-$82,000 zone is showing MASSIVE selling pressure:\n- Daily: Can't break for weeks (Sept 18-current)\n- 4H: Can't break for days (multiple 4H rejections)\n- 1H: Can't break for 3 days (5+ attempts)\n- 15M: Can't break (5 rejections with extreme RSI)\n\nThis is NOT retail resistance. This is INSTITUTIONAL distribution.\n\n=== ELLIOTT WAVE STRUCTURE ===\n\nEvery timeframe from 15M to Daily shows Wave 5 completion:\n- Daily: Wave 5 from $60k bottom (0.618 retracement to $114k top)\n- 4H: Wave 5 from $62k bottom\n- 1H: Wave 5 from $76k-78k area\n- 15M: Wave 5 completion with extreme RSI\n\nWhen Wave 5 completes on ALL timeframes simultaneously,\na significant correction is VERY likely.\n\n[... Complete detailed reasoning continues for 2000+ characters ...]\n\n=== RISK ASSESSMENT ===\n\nRisk Level: VERY_LOW\n\nPrimary Risks:\n1. 4H trendline support at $78k could bounce (15% prob)\n2. Bitcoin volatility spike (10% prob)\n3. News event override (5% prob)\n\nMitigation: Exit 75% by $78,250 before trendline test\n\n=== ENTRY PLAN ===\n\nEntry: $81,250 (NOW)\nStop: $81,650 (above 4-TF resistance)\n\nTargets:\nT1: $80,000 (20% exit, 2-6h, 95% prob) - Move to BE\nT2: $79,000 (20% exit, 6-12h, 90% prob)\nT3: $78,250 (35% exit, 12-24h, 85% prob) - PRIMARY\nT4: $75,500 (25% exit, 2-4d, 60% prob)\n\nR/R: 7:1\nExpected Value: +6.76 R\n\n═══════════════════════════════════════════════════"
+  },
+
+  "signals_generated": [
+    {
+      "id": "660e8400-e29b-41d4-a716-446655440001",
+      "symbol": "BTCUSD",
+      "timeframe": "1h",
+      "signal_type": "SELL",
+      "status": "ACTIVE",
+      "entry_price": 81250.0,
+      "current_price": 81250.0,
+      "target_price": 78250.0,
+      "stop_loss": 81650.0,
+      "confidence": 98.0,
+      "strategy": "4-Timeframe SMC Reversal",
+      "description": "SELL BTCUSD - 4-timeframe bearish alignment at institutional resistance. EQH on all TFs, Wave 5 complete, RSI extreme (15M: 84). Target: $78,250 (multi-TF support). R/R: 7:1. Confidence: 98%",
+      "generated_at": "2026-09-19T12:35:00Z",
+      "expires_at": "2026-09-19T16:35:00Z",
+      "trading_decision_id": "550e8400-e29b-41d4-a716-446655440000"
+    }
+  ],
+
+  "evidence_items_stored": 23,
+  "evidence_sample": [
+    {
+      "id": "770e8400-e29b-41d4-a716-446655440001",
+      "trading_decision_id": "550e8400-e29b-41d4-a716-446655440000",
+      "source": "15M Timeframe",
+      "type": "SMC Pattern - Equal Highs",
+      "description": "Equal Highs at $81,350 with 5 rejections over 3 hours",
+      "score": 40.0,
+      "confidence": 0.90,
+      "timestamp": "2026-09-19T12:30:00Z",
+      "metadata": {
+        "eq_type": "RESISTANCE",
+        "level": 81350.0,
+        "count": 5,
+        "swept": true,
+        "timeframe": "15M"
+      }
+    },
+    {
+      "id": "770e8400-e29b-41d4-a716-446655440002",
+      "trading_decision_id": "550e8400-e29b-41d4-a716-446655440000",
+      "source": "15M Timeframe",
+      "type": "Technical Indicator - RSI",
+      "description": "RSI at 83.99 - extreme overbought (happens <1% of time)",
+      "score": 25.0,
+      "confidence": 0.95,
+      "timestamp": "2026-09-19T12:30:00Z",
+      "metadata": {
+        "rsi_value": 83.99,
+        "threshold": 70.0,
+        "extreme_threshold": 80.0,
+        "timeframe": "15M"
+      }
+    }
+  ],
+
+  "performance_tracking": {
+    "note": "Updated after trade completes",
+    "actual_entry_price": null,
+    "actual_exit_price": null,
+    "actual_pnl": null,
+    "actual_pnl_percent": null,
+    "trade_outcome": null,
+    "updated_at": null
+  }
+}

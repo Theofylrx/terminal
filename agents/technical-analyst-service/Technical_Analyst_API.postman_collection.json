@@ -1,0 +1,556 @@
+{
+	"info": {
+		"_postman_id": "technical-analyst-api-v2",
+		"name": "Technical Analyst Service API",
+		"description": "Enterprise-grade technical analysis service providing institutional-quality trading signals with Elliott Wave, RSI Divergence, and Smart Money Concepts.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "terminal-ai"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000/api/v1",
+			"type": "string"
+		},
+		{
+			"key": "symbol",
+			"value": "AAPL",
+			"type": "string"
+		},
+		{
+			"key": "timeframe",
+			"value": "1h",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Health",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/health",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"health"
+							]
+						},
+						"description": "Check if the Technical Analyst Service is running and healthy"
+					},
+					"response": []
+				}
+			],
+			"description": "Health check endpoints"
+		},
+		{
+			"name": "Signals",
+			"item": [
+				{
+					"name": "Generate Signal",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"symbol\": \"{{symbol}}\",\n  \"timeframe\": \"{{timeframe}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/signals/generate",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"signals",
+								"generate"
+							]
+						},
+						"description": "Generate a high-confidence trading signal using all 15 indicators, 10+ patterns, Elliott Wave, RSI divergences, and Smart Money Concepts."
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Signals",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/signals?limit=100",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"signals"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "100"
+								},
+								{
+									"key": "symbol",
+									"value": "{{symbol}}",
+									"disabled": true
+								},
+								{
+									"key": "status",
+									"value": "ACTIVE",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Retrieve all trading signals with optional filters"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Signal by Symbol",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/signals?symbol={{symbol}}&limit=50",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"signals"
+							],
+							"query": [
+								{
+									"key": "symbol",
+									"value": "{{symbol}}"
+								},
+								{
+									"key": "limit",
+									"value": "50"
+								}
+							]
+						},
+						"description": "Get signals filtered by symbol"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Active Signals",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/signals?status=ACTIVE&limit=100",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"signals"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "ACTIVE"
+								},
+								{
+									"key": "limit",
+									"value": "100"
+								}
+							]
+						},
+						"description": "Get only active signals"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Signal by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/signals/:signal_id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"signals",
+								":signal_id"
+							],
+							"variable": [
+								{
+									"key": "signal_id",
+									"value": "replace-with-signal-id"
+								}
+							]
+						},
+						"description": "Retrieve a specific signal by its ID"
+					},
+					"response": []
+				}
+			],
+			"description": "Trading signal generation and management"
+		},
+		{
+			"name": "Indicators",
+			"item": [
+				{
+					"name": "Get Technical Indicators",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/indicators/{{symbol}}?timeframe={{timeframe}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"indicators",
+								"{{symbol}}"
+							],
+							"query": [
+								{
+									"key": "timeframe",
+									"value": "{{timeframe}}"
+								}
+							]
+						},
+						"description": "Calculate and return all 15 technical indicators (RSI, MACD, Bollinger Bands, EMAs, ATR, etc.)"
+					},
+					"response": []
+				}
+			],
+			"description": "Technical indicator calculations"
+		},
+		{
+			"name": "Elliott Wave",
+			"item": [
+				{
+					"name": "Detect Bullish Elliott Wave",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/elliott-wave/{{symbol}}?timeframe={{timeframe}}&direction=bullish",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"elliott-wave",
+								"{{symbol}}"
+							],
+							"query": [
+								{
+									"key": "timeframe",
+									"value": "{{timeframe}}"
+								},
+								{
+									"key": "direction",
+									"value": "bullish"
+								}
+							]
+						},
+						"description": "Detect bullish Elliott Wave 5-wave impulse pattern with Fibonacci retracements and extensions"
+					},
+					"response": []
+				},
+				{
+					"name": "Detect Bearish Elliott Wave",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/elliott-wave/{{symbol}}?timeframe={{timeframe}}&direction=bearish",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"elliott-wave",
+								"{{symbol}}"
+							],
+							"query": [
+								{
+									"key": "timeframe",
+									"value": "{{timeframe}}"
+								},
+								{
+									"key": "direction",
+									"value": "bearish"
+								}
+							]
+						},
+						"description": "Detect bearish Elliott Wave 5-wave impulse pattern with Fibonacci retracements and extensions"
+					},
+					"response": []
+				},
+				{
+					"name": "Detect Leading Diagonal",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/elliott-wave/diagonal/{{symbol}}?timeframe={{timeframe}}&direction=bullish&diagonal_type=leading",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"elliott-wave",
+								"diagonal",
+								"{{symbol}}"
+							],
+							"query": [
+								{
+									"key": "timeframe",
+									"value": "{{timeframe}}"
+								},
+								{
+									"key": "direction",
+									"value": "bullish"
+								},
+								{
+									"key": "diagonal_type",
+									"value": "leading"
+								}
+							]
+						},
+						"description": "Detect Leading Diagonal pattern (Wave 1 or A) - trend start with wave overlap"
+					},
+					"response": []
+				},
+				{
+					"name": "Detect Ending Diagonal",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/elliott-wave/diagonal/{{symbol}}?timeframe={{timeframe}}&direction=bullish&diagonal_type=ending",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"elliott-wave",
+								"diagonal",
+								"{{symbol}}"
+							],
+							"query": [
+								{
+									"key": "timeframe",
+									"value": "{{timeframe}}"
+								},
+								{
+									"key": "direction",
+									"value": "bullish"
+								},
+								{
+									"key": "diagonal_type",
+									"value": "ending"
+								}
+							]
+						},
+						"description": "Detect Ending Diagonal pattern (Wave 5 or C) - HIGH-VALUE trend exhaustion/reversal signal"
+					},
+					"response": []
+				},
+				{
+					"name": "Detect Zig-Zag Correction",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/elliott-wave/correction/{{symbol}}?timeframe={{timeframe}}&correction_type=zigzag",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"elliott-wave",
+								"correction",
+								"{{symbol}}"
+							],
+							"query": [
+								{
+									"key": "timeframe",
+									"value": "{{timeframe}}"
+								},
+								{
+									"key": "correction_type",
+									"value": "zigzag"
+								}
+							]
+						},
+						"description": "Detect Zig-Zag correction (A-B-C) - sharp correction against major trend"
+					},
+					"response": []
+				},
+				{
+					"name": "Detect Flat Correction",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/elliott-wave/correction/{{symbol}}?timeframe={{timeframe}}&correction_type=flat",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"elliott-wave",
+								"correction",
+								"{{symbol}}"
+							],
+							"query": [
+								{
+									"key": "timeframe",
+									"value": "{{timeframe}}"
+								},
+								{
+									"key": "correction_type",
+									"value": "flat"
+								}
+							]
+						},
+						"description": "Detect Flat correction (A-B-C) - sideways correction with variants (Regular, Expanded, Running)"
+					},
+					"response": []
+				},
+				{
+					"name": "Detect Triangle Pattern",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/elliott-wave/correction/{{symbol}}?timeframe={{timeframe}}&correction_type=triangle",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"elliott-wave",
+								"correction",
+								"{{symbol}}"
+							],
+							"query": [
+								{
+									"key": "timeframe",
+									"value": "{{timeframe}}"
+								},
+								{
+									"key": "correction_type",
+									"value": "triangle"
+								}
+							]
+						},
+						"description": "Detect Triangle pattern (A-B-C-D-E) - continuation pattern with converging/diverging trendlines"
+					},
+					"response": []
+				}
+			],
+			"description": "Comprehensive Elliott Wave pattern detection with all 9 pattern types from the handbook"
+		},
+		{
+			"name": "Divergences",
+			"item": [
+				{
+					"name": "Detect RSI Divergences",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/divergences/{{symbol}}?timeframe={{timeframe}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"divergences",
+								"{{symbol}}"
+							],
+							"query": [
+								{
+									"key": "timeframe",
+									"value": "{{timeframe}}"
+								}
+							]
+						},
+						"description": "Detect all RSI divergence types (Regular Bullish/Bearish, Hidden Bullish/Bearish) with Break of Structure confirmation"
+					},
+					"response": []
+				}
+			],
+			"description": "RSI divergence detection with BOS confirmation"
+		},
+		{
+			"name": "Smart Money Concepts",
+			"item": [
+				{
+					"name": "Detect Smart Money Patterns",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/smart-money/{{symbol}}?timeframe={{timeframe}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"smart-money",
+								"{{symbol}}"
+							],
+							"query": [
+								{
+									"key": "timeframe",
+									"value": "{{timeframe}}"
+								}
+							]
+						},
+						"description": "Detect all 14 institutional trading patterns:\n\n**Core Patterns (6):**\n- BOS (Break of Structure) - Trend continuation signals\n- CHoCH (Change of Character) - Trend reversal signals\n- FVG (Fair Value Gap) - Price imbalances\n- Supply/Demand Zones - Institutional S/R areas\n- Order Blocks - Institutional entry zones\n- Liquidity Sweeps (BSL/SSL) - Stop hunts\n\n**Advanced Patterns (8):**\n- EQH/EQL (Equal Highs/Lows) - Liquidity pools at same price levels\n- Order Flow (OF) - General institutional zones before trend changes\n- IFC (Institutional Funding Candle) - Reversal candles that sweep and close back\n- FBOS (False Break of Structure) - False signals that trap retail traders\n- Session Liquidity - Asia/London/NY session high/low sweeps\n- Daily Liquidity (PDH/PDL, PWH/PWL) - Previous Day/Week high/low levels\n- SMT (Smart Money Trap) - First pullback traps after major moves\n- IDM (Inducement) - Small moves that trap retail before reversals\n\n**Complete institutional-grade Smart Money Concepts implementation as per official handbook.**"
+					},
+					"response": []
+				}
+			],
+			"description": "Smart Money Concepts - Complete 14-Pattern Implementation (BOS, CHoCH, FVG, Supply/Demand, Order Blocks, Liquidity Sweeps, EQH/EQL, Order Flow, IFC, FBOS, Session Liquidity, PDH/PDL, SMT, IDM)"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Set default variables if not set",
+					"if (!pm.variables.get('base_url')) {",
+					"    pm.variables.set('base_url', 'http://localhost:8000/api/v1');",
+					"}",
+					"if (!pm.variables.get('symbol')) {",
+					"    pm.variables.set('symbol', 'AAPL');",
+					"}",
+					"if (!pm.variables.get('timeframe')) {",
+					"    pm.variables.set('timeframe', '1h');",
+					"}"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Common tests for all endpoints",
+					"pm.test('Status code is 2xx', function () {",
+					"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+					"});",
+					"",
+					"pm.test('Response time is less than 5000ms', function () {",
+					"    pm.expect(pm.response.responseTime).to.be.below(5000);",
+					"});",
+					"",
+					"pm.test('Content-Type is JSON', function () {",
+					"    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+					"});"
+				]
+			}
+		}
+	]
+}

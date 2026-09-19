@@ -79,6 +79,9 @@ class Order(BaseModel):
     user_id = Column(String(36), ForeignKey("users.id"), nullable=False, index=True)
     position_id = Column(String(36), ForeignKey("positions.id"), nullable=True, index=True)
 
+    # Broker credential link - tracks which broker account was used
+    broker_credential_id = Column(String(36), ForeignKey("broker_credentials.id"), nullable=True, index=True)
+
     # Order details
     symbol = Column(String(20), nullable=False, index=True)
     asset_class = Column(SQLEnum("AssetClass"), nullable=False)  # Reference from Position model
