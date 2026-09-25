@@ -9,8 +9,8 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies (exclude platform-specific optional deps)
-RUN npm install --legacy-peer-deps --ignore-scripts && \
-    npm rebuild && \
+RUN npm install --legacy-peer-deps --ignore-scripts || npm install --legacy-peer-deps --force && \
+    npm rebuild || true && \
     npm install @rollup/rollup-linux-arm64-musl --save-optional || true
 
 # Copy source code
