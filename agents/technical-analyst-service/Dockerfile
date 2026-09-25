@@ -1,6 +1,6 @@
-# Multi-stage Dockerfile for Technical Analyst Service
+# Dockerfile for Technical Analyst Service (ARM64 compatible)
 
-FROM python:3.11-slim as builder
+FROM python:3.11-slim
 
 WORKDIR /app
 
@@ -8,38 +8,21 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     g++ \
-    build-essential \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements
-COPY agents/technical-analyst-service/requirements.txt .
-
-# Install Python dependencies
-RUN pip install --user --no-cache-dir -r requirements.txt
-
-# Runtime stage
-FROM python:3.11-slim
-
-WORKDIR /app
-
-# Install runtime dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpq5 \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy Python dependencies from builder
-COPY --from=builder /root/.local /root/.local
+# Copy requirements and install Python dependencies
+COPY agents/technical-analyst-service/requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r /app/requirements.txt
 
 # Set Python path
-ENV PATH=/root/.local/bin:$PATH
 ENV PYTHONPATH=/app:$PYTHONPATH
 
 # Copy shared library
 COPY shared /app/shared
 
-# Copy technical analyst service
-COPY agents/technical-analyst-service /app/agents/technical-analyst-service
+# Copy technical analyst service (rename to use underscores for Python import)
+COPY agents/technical-analyst-service /app/agents/technical_analyst_service
 
 # Create non-root user
 RUN useradd -m -u 1000 analystuser && \

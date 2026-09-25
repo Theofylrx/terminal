@@ -409,6 +409,54 @@ class MarketDataService:
         self.websocket_clients.discard(client)
         logger.info(f"WebSocket client disconnected. Total: {len(self.websocket_clients)}")
 
+    async def get_live_price(self, symbol: str) -> float:
+        """
+        Get live price directly from broker connector.
+
+        Args:
+            symbol: Trading symbol (e.g., "AAPL", "BTCUSDT")
+
+        Returns:
+            Current price or None if not available
+        """
+        try:
+            # Determine broker based on symbol format
+            if "/" in symbol or symbol.endswith("USDT") or symbol.endswith("BTC"):
+                # Crypto symbol
+                connector = self.connectors.get("binance")
+                broker_name = "binance"
+            else:
+                # Stock symbol
+                connector = self.connectors.get("alpaca")
+                broker_name = "alpaca"
+
+            if not connector or not connector.is_connected():
+                logger.warning(f"Connector {broker_name} not available for {symbol}")
+                return None
+
+            # Get latest quote from broker
+            quote = await connector.get_latest_quote(symbol)
+
+            if quote:
+                # Calculate mid price from bid/ask
+                if hasattr(quote, 'bid_price') and hasattr(quote, 'ask_price'):
+                    price = (quote.bid_price + quote.ask_price) / 2
+                elif hasattr(quote, 'price'):
+                    price = quote.price
+                else:
+                    logger.warning(f"Quote for {symbol} has no price data")
+                    return None
+
+                logger.info(f"Live price for {symbol}: ${price:.2f}")
+                return float(price)
+            else:
+                logger.warning(f"No quote received from {broker_name} for {symbol}")
+                return None
+
+        except Exception as e:
+            logger.error(f"Error getting live price for {symbol}: {e}")
+            return None
+
     def get_status(self) -> dict:
         """Get service status."""
         return {

@@ -290,14 +290,37 @@ async def get_latest_bar(
     symbol: str,
     timeframe: str = "1m",
     session: AsyncSession = Depends(get_db_session),
+    service: MarketDataService = Depends(get_market_data_service),
 ):
-    """Get latest bar for symbol."""
+    """
+    Get latest bar for symbol.
+
+    Falls back to live broker data if database has no data.
+    """
     repo = OHLCVRepository(session)
 
     try:
         bar = await repo.get_latest(symbol, timeframe)
 
         if not bar:
+            # Fallback: get live price from broker
+            logger.info(f"No DB data for {symbol}, fetching live price from broker")
+            live_price = await service.get_live_price(symbol)
+
+            if live_price:
+                # Return a synthetic bar from live price
+                return BarResponse(
+                    symbol=symbol,
+                    timeframe=timeframe,
+                    timestamp=datetime.utcnow(),
+                    open=live_price,
+                    high=live_price,
+                    low=live_price,
+                    close=live_price,
+                    volume=0,
+                    trade_count=0,
+                )
+
             raise HTTPException(status_code=404, detail=f"No data found for {symbol}")
 
         return BarResponse(
