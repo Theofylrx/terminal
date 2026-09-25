@@ -66,6 +66,42 @@ const Watchlist: React.FC = () => {
   const [newSymbol, setNewSymbol] = useState('')
   const [showAddForm, setShowAddForm] = useState(false)
 
+  useEffect(() => {
+    const updatePrices = async () => {
+      // Fetch real-time prices from Market Data Service
+      const updatedWatchlist = await Promise.all(
+        watchlist.map(async (item) => {
+          try {
+            // Try to fetch latest quote
+            const response = await fetch(`http://localhost:8003/api/v1/quote/${item.symbol}`)
+            if (response.ok) {
+              const data = await response.json()
+              const newPrice = data.price || item.price
+              const change = newPrice - item.price
+              const changePercent = (change / item.price) * 100
+
+              return {
+                ...item,
+                price: newPrice,
+                change: change,
+                changePercent: changePercent
+              }
+            }
+          } catch (error) {
+            // Keep existing data if fetch fails
+            console.debug(`Could not update ${item.symbol}`)
+          }
+          return item
+        })
+      )
+      setWatchlist(updatedWatchlist)
+    }
+
+    // Update prices every 5 seconds
+    const interval = setInterval(updatePrices, 5000)
+    return () => clearInterval(interval)
+  }, [watchlist.length]) // Only re-create interval when watchlist size changes
+
   const handleAddSymbol = () => {
     if (newSymbol.trim()) {
       // In real app, fetch symbol data from API
