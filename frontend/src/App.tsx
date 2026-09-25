@@ -2,8 +2,8 @@ import React, { useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import MainLayout from './components/templates/MainLayout'
 import Login from './components/pages/Login'
-import Dashboard from './components/pages/Dashboard'
-import Trading from './components/pages/Trading'
+import DashboardNew from './components/pages/DashboardNew'
+import TradingNew from './components/pages/TradingNew'
 import Portfolio from './components/pages/Portfolio'
 import Settings from './components/pages/Settings'
 
@@ -26,10 +26,10 @@ function App() {
     <BrowserRouter>
       <MainLayout>
         <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/trading" element={<Trading />} />
+          <Route path="/" element={<DashboardNew />} />
+          <Route path="/trading" element={<TradingNew />} />
           <Route path="/portfolio" element={<Portfolio />} />
-          <Route path="/analysis" element={<Dashboard />} />
+          <Route path="/analysis" element={<DashboardNew />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
