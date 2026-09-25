@@ -257,11 +257,14 @@ class MarketDataService:
     async def _handle_trade(self, trade: Trade):
         """Handle incoming trade data."""
         try:
+            # Strip timezone for database (uses timestamp without time zone)
+            timestamp = trade.timestamp.replace(tzinfo=None) if trade.timestamp.tzinfo else trade.timestamp
+
             # Store in database
             await self.trade_repo.upsert(
                 symbol=trade.symbol,
-                timestamp=trade.timestamp,
-                trade_id=f"{trade.timestamp.timestamp()}_{trade.price}",  # Generate ID
+                timestamp=timestamp,
+                trade_id=f"{timestamp.timestamp()}_{trade.price}",  # Generate ID
                 price=trade.price,
                 size=trade.size,
                 source=trade.exchange or "unknown",
@@ -297,10 +300,13 @@ class MarketDataService:
     async def _handle_quote(self, quote: Quote):
         """Handle incoming quote data."""
         try:
+            # Strip timezone for database (uses timestamp without time zone)
+            timestamp = quote.timestamp.replace(tzinfo=None) if quote.timestamp.tzinfo else quote.timestamp
+
             # Store in database
             await self.quote_repo.upsert(
                 symbol=quote.symbol,
-                timestamp=quote.timestamp,
+                timestamp=timestamp,
                 bid_price=quote.bid_price,
                 bid_size=quote.bid_size,
                 ask_price=quote.ask_price,
@@ -338,11 +344,14 @@ class MarketDataService:
     async def _handle_bar(self, bar: Bar):
         """Handle incoming bar (candlestick) data."""
         try:
+            # Strip timezone for database (uses timestamp without time zone)
+            timestamp = bar.timestamp.replace(tzinfo=None) if bar.timestamp.tzinfo else bar.timestamp
+
             # Store in database
             await self.ohlcv_repo.upsert(
                 symbol=bar.symbol,
                 timeframe=bar.timeframe,
-                timestamp=bar.timestamp,
+                timestamp=timestamp,
                 open=bar.open,
                 high=bar.high,
                 low=bar.low,

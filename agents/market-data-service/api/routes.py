@@ -295,45 +295,64 @@ async def get_latest_bar(
     """
     Get latest bar for symbol.
 
-    Falls back to live broker data if database has no data.
+    Falls back to quotes, then live broker data if OHLCV bars unavailable.
     """
-    repo = OHLCVRepository(session)
+    ohlcv_repo = OHLCVRepository(session)
+    quote_repo = QuoteRepository(session)
 
     try:
-        bar = await repo.get_latest(symbol, timeframe)
+        # Try OHLCV bars first
+        bar = await ohlcv_repo.get_latest(symbol, timeframe)
 
-        if not bar:
-            # Fallback: get live price from broker
-            logger.info(f"No DB data for {symbol}, fetching live price from broker")
-            live_price = await service.get_live_price(symbol)
+        if bar:
+            return BarResponse(
+                symbol=bar.symbol,
+                timeframe=bar.timeframe,
+                timestamp=bar.timestamp,
+                open=bar.open,
+                high=bar.high,
+                low=bar.low,
+                close=bar.close,
+                volume=bar.volume,
+                trade_count=bar.num_trades,
+            )
 
-            if live_price:
-                # Return a synthetic bar from live price
-                return BarResponse(
-                    symbol=symbol,
-                    timeframe=timeframe,
-                    timestamp=datetime.utcnow(),
-                    open=live_price,
-                    high=live_price,
-                    low=live_price,
-                    close=live_price,
-                    volume=0,
-                    trade_count=0,
-                )
+        # Fallback 1: Use latest quote from database
+        quote = await quote_repo.get_latest(symbol)
+        if quote:
+            mid_price = quote.calculate_mid_price()
+            logger.info(f"No OHLCV for {symbol}, using latest quote: ${mid_price}")
+            return BarResponse(
+                symbol=symbol,
+                timeframe=timeframe,
+                timestamp=quote.timestamp,
+                open=mid_price,
+                high=mid_price,
+                low=mid_price,
+                close=mid_price,
+                volume=0,
+                trade_count=0,
+            )
 
-            raise HTTPException(status_code=404, detail=f"No data found for {symbol}")
+        # Fallback 2: get live price from broker
+        logger.info(f"No DB data for {symbol}, fetching live price from broker")
+        live_price = await service.get_live_price(symbol)
 
-        return BarResponse(
-            symbol=bar.symbol,
-            timeframe=bar.timeframe,
-            timestamp=bar.timestamp,
-            open=bar.open,
-            high=bar.high,
-            low=bar.low,
-            close=bar.close,
-            volume=bar.volume,
-            trade_count=bar.num_trades,
-        )
+        if live_price:
+            # Return a synthetic bar from live price
+            return BarResponse(
+                symbol=symbol,
+                timeframe=timeframe,
+                timestamp=datetime.utcnow(),
+                open=live_price,
+                high=live_price,
+                low=live_price,
+                close=live_price,
+                volume=0,
+                trade_count=0,
+            )
+
+        raise HTTPException(status_code=404, detail=f"No data found for {symbol}")
 
     except HTTPException:
         raise
