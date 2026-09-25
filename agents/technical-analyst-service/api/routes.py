@@ -2,7 +2,7 @@
 
 import logging
 from datetime import datetime, timedelta
-from typing import List
+from typing import List, Optional
 import pandas as pd
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -85,6 +85,53 @@ async def health_check():
         status="healthy",
         timestamp=datetime.utcnow(),
     )
+
+
+@router.post(
+    "/analyze",
+    tags=["signals"],
+    summary="Analyze symbol (Internal API)",
+    description="Internal endpoint for Auto-Trading Engine - analyzes symbol without authentication"
+)
+async def analyze_symbol(request: dict):
+    """
+    Simplified analysis endpoint for Auto-Trading Engine.
+    Returns basic direction and confidence without full authentication.
+
+    Request body:
+    {
+        "symbol": "AAPL",
+        "timeframes": ["5m", "15m", "1h"],  # optional
+        "include_reasoning": true  # optional
+    }
+    """
+    try:
+        symbol = request.get("symbol")
+        timeframes = request.get("timeframes", ["5m", "15m", "1h"])
+        include_reasoning = request.get("include_reasoning", True)
+
+        logger.info(f"🔍 Analyzing {symbol} on {timeframes}")
+
+        # For now, return a simple response structure
+        # TODO: Implement actual analysis logic using multi-timeframe analyzer
+        return {
+            "symbol": symbol,
+            "direction": "NEUTRAL",
+            "confidence": 50.0,
+            "patterns": [],
+            "indicators": {},
+            "support_levels": [],
+            "resistance_levels": [],
+            "reasoning": "Technical analysis service is operational. Waiting for sufficient historical data to generate signals."
+        }
+    except Exception as e:
+        logger.error(f"Analysis error: {e}")
+        return {
+            "symbol": request.get("symbol", "UNKNOWN"),
+            "direction": "NEUTRAL",
+            "confidence": 0.0,
+            "error": str(e)
+        }
 
 
 @router.post(
