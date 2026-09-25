@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react'
-import { TrendingUp, TrendingDown, DollarSign, Percent } from 'lucide-react'
+import { TrendingUp, TrendingDown, DollarSign, Percent, BarChart3 } from 'lucide-react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 
 interface Position {
   symbol: string
@@ -50,126 +53,160 @@ const Portfolio: React.FC = () => {
   const totalPnLPercent = positionsData?.total_pnl_percent || 0
 
   return (
-    <div className="p-8 space-y-6">
+    <div className="flex-1 space-y-6 p-8 bg-slate-50">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-semibold text-slate-900">Portfolio</h1>
-        <p className="text-sm text-slate-600 mt-1">Track your positions and performance</p>
+        <h1 className="text-3xl font-bold tracking-tight">Portfolio</h1>
+        <p className="text-muted-foreground mt-1">
+          Track your positions and performance
+        </p>
       </div>
 
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <div className="w-6 h-6 border-2 border-slate-200 border-t-blue-600 rounded-full animate-spin"></div>
+          <div className="w-8 h-8 border-4 border-slate-200 border-t-primary rounded-full animate-spin"></div>
         </div>
       ) : (
         <>
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="bg-white border border-slate-200 rounded-lg p-5">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Total Value</span>
-                <DollarSign className="w-4 h-4 text-slate-400" />
-              </div>
-              <p className="text-2xl font-semibold text-slate-900">${totalValue.toLocaleString()}</p>
-            </div>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <Card className="hover:shadow-md transition-shadow">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Total Value
+                </CardTitle>
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">${totalValue.toLocaleString()}</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Market value of positions
+                </p>
+              </CardContent>
+            </Card>
 
-            <div className="bg-white border border-slate-200 rounded-lg p-5">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Total P&L</span>
+            <Card className="hover:shadow-md transition-shadow">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Total P&L
+                </CardTitle>
                 {totalPnL >= 0 ? (
-                  <TrendingUp className="w-4 h-4 text-emerald-600" />
+                  <TrendingUp className="h-4 w-4 text-emerald-600" />
                 ) : (
-                  <TrendingDown className="w-4 h-4 text-red-600" />
+                  <TrendingDown className="h-4 w-4 text-red-600" />
                 )}
-              </div>
-              <p className={`text-2xl font-semibold ${totalPnL >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                {totalPnL >= 0 ? '+' : ''}${totalPnL.toFixed(2)}
-              </p>
-            </div>
+              </CardHeader>
+              <CardContent>
+                <div className={`text-2xl font-bold ${totalPnL >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                  {totalPnL >= 0 ? '+' : ''}${totalPnL.toFixed(2)}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Unrealized profit/loss
+                </p>
+              </CardContent>
+            </Card>
 
-            <div className="bg-white border border-slate-200 rounded-lg p-5">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Return %</span>
-                <Percent className="w-4 h-4 text-slate-400" />
-              </div>
-              <p className={`text-2xl font-semibold ${totalPnLPercent >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                {totalPnLPercent >= 0 ? '+' : ''}{totalPnLPercent.toFixed(2)}%
-              </p>
-            </div>
+            <Card className="hover:shadow-md transition-shadow">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Return %
+                </CardTitle>
+                <Percent className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className={`text-2xl font-bold ${totalPnLPercent >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                  {totalPnLPercent >= 0 ? '+' : ''}{totalPnLPercent.toFixed(2)}%
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Portfolio return
+                </p>
+              </CardContent>
+            </Card>
 
-            <div className="bg-white border border-slate-200 rounded-lg p-5">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Positions</span>
-              </div>
-              <p className="text-2xl font-semibold text-slate-900">{positions.length}</p>
-            </div>
+            <Card className="hover:shadow-md transition-shadow">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Positions
+                </CardTitle>
+                <BarChart3 className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{positions.length}</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Open positions
+                </p>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Positions Table */}
-          <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-200">
-              <h2 className="text-base font-semibold text-slate-900">Open Positions</h2>
-            </div>
-
-            {positions.length === 0 ? (
-              <div className="text-center py-16">
-                <p className="text-slate-500 mb-2">No open positions</p>
-                <p className="text-sm text-slate-400">Place a trade to see your positions here</p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-slate-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Symbol</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Broker</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Quantity</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Avg Price</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Current Price</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">P&L</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">P&L %</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200">
-                    {positions.map((position) => (
-                      <tr key={`${position.broker}-${position.symbol}`} className="hover:bg-slate-50 transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm font-medium text-slate-900">{position.symbol}</span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 py-1 rounded text-xs font-medium ${
-                            position.broker === 'alpaca' ? 'bg-blue-50 text-blue-700' : 'bg-purple-50 text-purple-700'
-                          }`}>
-                            {position.broker.toUpperCase()}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{position.quantity}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">${position.avg_entry_price.toFixed(2)}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">${position.current_price.toFixed(2)}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`text-sm font-medium ${position.unrealized_pnl >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                            {position.unrealized_pnl >= 0 ? '+' : ''}${position.unrealized_pnl.toFixed(2)}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${
-                            position.unrealized_pnl_percent >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'
-                          }`}>
-                            {position.unrealized_pnl_percent >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                            {position.unrealized_pnl_percent >= 0 ? '+' : ''}{position.unrealized_pnl_percent.toFixed(2)}%
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <button className="text-sm text-red-600 hover:text-red-700 font-medium transition-colors">Close</button>
-                        </td>
+          <Card>
+            <CardHeader>
+              <CardTitle>Open Positions</CardTitle>
+              <CardDescription>
+                Monitor and manage your active positions
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {positions.length === 0 ? (
+                <div className="text-center py-12">
+                  <BarChart3 className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                  <p className="text-slate-500 mb-2 font-medium">No open positions</p>
+                  <p className="text-sm text-muted-foreground">Place a trade to see your positions here</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-slate-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Symbol</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Broker</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Quantity</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Avg Price</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Current Price</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">P&L</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">P&L %</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200">
+                      {positions.map((position) => (
+                        <tr key={`${position.broker}-${position.symbol}`} className="hover:bg-slate-50 transition-colors">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="text-sm font-medium text-slate-900">{position.symbol}</span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <Badge variant={position.broker === 'alpaca' ? 'secondary' : 'outline'}>
+                              {position.broker.toUpperCase()}
+                            </Badge>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{position.quantity}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">${position.avg_entry_price.toFixed(2)}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">${position.current_price.toFixed(2)}</td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`text-sm font-medium ${position.unrealized_pnl >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                              {position.unrealized_pnl >= 0 ? '+' : ''}${position.unrealized_pnl.toFixed(2)}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <Badge variant={position.unrealized_pnl_percent >= 0 ? 'success' : 'destructive'}>
+                              {position.unrealized_pnl_percent >= 0 ? <TrendingUp className="w-3 h-3 mr-1" /> : <TrendingDown className="w-3 h-3 mr-1" />}
+                              {position.unrealized_pnl_percent >= 0 ? '+' : ''}{position.unrealized_pnl_percent.toFixed(2)}%
+                            </Badge>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <Button variant="destructive" size="sm">
+                              Close
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </>
       )}
     </div>
