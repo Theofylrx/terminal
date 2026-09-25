@@ -230,6 +230,48 @@ class AlpacaConnector(BrokerConnector):
             self.logger.error(f"Failed to fetch historical bars: {e}")
             return []
 
+    async def get_latest_quote(self, symbol: str) -> Optional[Quote]:
+        """
+        Get latest quote (bid/ask) for a symbol from Alpaca.
+
+        Args:
+            symbol: Stock symbol (e.g., "AAPL").
+
+        Returns:
+            Quote object with latest bid/ask prices, or None if failed.
+        """
+        try:
+            # Use the Alpaca SDK to get latest quote
+            from alpaca.data.requests import StockLatestQuoteRequest
+            from alpaca.data.historical import StockHistoricalDataClient
+
+            # Create a quote request
+            request = StockLatestQuoteRequest(symbol_or_symbols=symbol)
+
+            # Get latest quote
+            quote_data = self.historical_client.get_stock_latest_quote(request)
+
+            if symbol in quote_data:
+                latest = quote_data[symbol]
+                quote = Quote(
+                    symbol=symbol,
+                    bid_price=float(latest.bid_price),
+                    bid_size=float(latest.bid_size),
+                    ask_price=float(latest.ask_price),
+                    ask_size=float(latest.ask_size),
+                    timestamp=latest.timestamp,
+                )
+
+                self.logger.debug(f"Fetched latest quote for {symbol}: bid={quote.bid_price}, ask={quote.ask_price}")
+                return quote
+            else:
+                self.logger.warning(f"No quote data returned for {symbol}")
+                return None
+
+        except Exception as e:
+            self.logger.error(f"Failed to fetch latest quote for {symbol}: {e}")
+            return None
+
     async def _listen(self) -> None:
         """Listen for incoming WebSocket messages."""
         try:

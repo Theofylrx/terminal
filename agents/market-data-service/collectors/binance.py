@@ -10,7 +10,7 @@ import websockets
 from binance import AsyncClient
 from binance.enums import *
 
-from .base import Bar, BrokerConnector, MarketDataType, Trade
+from .base import Bar, BrokerConnector, MarketDataType, Quote, Trade
 
 
 logger = logging.getLogger(__name__)
@@ -246,6 +246,40 @@ class BinanceConnector(BrokerConnector):
         except Exception as e:
             self.logger.error(f"Failed to fetch historical bars: {e}")
             return []
+
+    async def get_latest_quote(self, symbol: str) -> Optional[Quote]:
+        """
+        Get latest quote (bid/ask) for a symbol from Binance.
+
+        Args:
+            symbol: Trading pair (e.g., "BTCUSDT").
+
+        Returns:
+            Quote object with latest bid/ask prices, or None if failed.
+        """
+        if not self.client:
+            raise ConnectionError("Not connected to Binance")
+
+        try:
+            # Get 24hr ticker statistics which includes bid/ask
+            ticker = await self.client.get_ticker(symbol=symbol)
+
+            # Binance ticker includes bidPrice and askPrice
+            quote = Quote(
+                symbol=symbol,
+                bid_price=float(ticker['bidPrice']),
+                bid_size=float(ticker.get('bidQty', 0)),
+                ask_price=float(ticker['askPrice']),
+                ask_size=float(ticker.get('askQty', 0)),
+                timestamp=datetime.utcnow(),
+            )
+
+            self.logger.debug(f"Fetched latest quote for {symbol}: bid={quote.bid_price}, ask={quote.ask_price}")
+            return quote
+
+        except Exception as e:
+            self.logger.error(f"Failed to fetch latest quote for {symbol}: {e}")
+            return None
 
     async def _listen(self, symbol: str, ws) -> None:
         """Listen for incoming WebSocket messages for a symbol."""
