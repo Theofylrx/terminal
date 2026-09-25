@@ -10,16 +10,22 @@ import {
   LogOut,
   Bell,
   Search,
-  ChevronDown
+  ChevronDown,
+  Zap,
+  FileText,
+  Star
 } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 
 interface MainLayoutProps {
   children: React.ReactNode
+  onLogout?: () => void
 }
 
-const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
+const MainLayout: React.FC<MainLayoutProps> = ({ children, onLogout }) => {
   const location = useLocation()
   const [accountData, setAccountData] = useState<any>(null)
+  const [notifications, setNotifications] = useState(3) // Mock notification count
 
   useEffect(() => {
     const fetchAccount = async () => {
@@ -41,7 +47,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
     { name: 'Trading', href: '/trading', icon: TrendingUp },
     { name: 'Portfolio', href: '/portfolio', icon: Wallet },
-    { name: 'Analytics', href: '/analysis', icon: BarChart3 },
+    { name: 'Signals', href: '/signals', icon: Zap },
+    { name: 'Orders', href: '/orders', icon: FileText },
+    { name: 'Watchlist', href: '/watchlist', icon: Star },
     { name: 'Settings', href: '/settings', icon: Settings },
   ]
 
@@ -89,16 +97,26 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
         {/* User Section */}
         <div className="p-4 border-t border-slate-200">
-          <button className="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-slate-50 transition-colors">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white text-sm font-semibold">
-              U
+          <div className="space-y-2">
+            <div className="flex items-center gap-3 px-3 py-2">
+              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white text-sm font-semibold">
+                U
+              </div>
+              <div className="flex-1 text-left">
+                <div className="text-sm font-medium text-slate-900">User</div>
+                <div className="text-xs text-slate-500">demo_user</div>
+              </div>
             </div>
-            <div className="flex-1 text-left">
-              <div className="text-sm font-medium text-slate-900">User</div>
-              <div className="text-xs text-slate-500">demo_user</div>
-            </div>
-            <ChevronDown className="w-4 h-4 text-slate-400" />
-          </button>
+            {onLogout && (
+              <button
+                onClick={onLogout}
+                className="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-red-50 text-red-600 transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="text-sm font-medium">Logout</span>
+              </button>
+            )}
+          </div>
         </div>
       </aside>
 
@@ -133,7 +151,14 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
             {/* Notifications */}
             <button className="relative p-2 hover:bg-slate-50 rounded-lg transition-colors">
               <Bell className="w-5 h-5 text-slate-600" />
-              <div className="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-600 rounded-full"></div>
+              {notifications > 0 && (
+                <Badge
+                  variant="destructive"
+                  className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                >
+                  {notifications}
+                </Badge>
+              )}
             </button>
           </div>
         </header>

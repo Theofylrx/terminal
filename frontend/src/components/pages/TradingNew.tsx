@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge'
 
 const TradingNew: React.FC = () => {
   const [orderForm, setOrderForm] = useState({
-    symbol: '',
+    symbol: 'AAPL',
     assetClass: 'STOCK',
     side: 'BUY',
     orderType: 'MARKET',
@@ -19,6 +19,11 @@ const TradingNew: React.FC = () => {
   })
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState<{type: 'success' | 'error', message: string} | null>(null)
+
+  const stockSymbols = ['AAPL', 'GOOGL', 'MSFT', 'AMZN', 'TSLA', 'META', 'NVDA', 'AMD', 'NFLX', 'DIS']
+  const cryptoSymbols = ['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'SOLUSDT', 'ADAUSDT', 'XRPUSDT', 'DOGEUSDT', 'DOTUSDT']
+
+  const availableSymbols = orderForm.assetClass === 'STOCK' ? stockSymbols : cryptoSymbols
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -104,30 +109,37 @@ const TradingNew: React.FC = () => {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Symbol & Asset Class */}
+                {/* Asset Class & Symbol */}
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                      Symbol
-                    </label>
-                    <Input
-                      placeholder="AAPL, BTCUSDT..."
-                      value={orderForm.symbol}
-                      onChange={(e) => setOrderForm(prev => ({ ...prev, symbol: e.target.value.toUpperCase() }))}
-                      required
-                    />
-                  </div>
-
                   <div className="space-y-2">
                     <label className="text-sm font-medium leading-none">
                       Asset Class
                     </label>
                     <Select
                       value={orderForm.assetClass}
-                      onChange={(e) => setOrderForm(prev => ({ ...prev, assetClass: e.target.value }))}
+                      onChange={(e) => {
+                        const newAssetClass = e.target.value
+                        const newSymbol = newAssetClass === 'STOCK' ? 'AAPL' : 'BTCUSDT'
+                        setOrderForm(prev => ({ ...prev, assetClass: newAssetClass, symbol: newSymbol }))
+                      }}
                     >
                       <option value="STOCK">Stock</option>
                       <option value="CRYPTO">Crypto</option>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                      Symbol
+                    </label>
+                    <Select
+                      value={orderForm.symbol}
+                      onChange={(e) => setOrderForm(prev => ({ ...prev, symbol: e.target.value }))}
+                      required
+                    >
+                      {availableSymbols.map(symbol => (
+                        <option key={symbol} value={symbol}>{symbol}</option>
+                      ))}
                     </Select>
                   </div>
                 </div>

@@ -5,6 +5,9 @@ import Login from './components/pages/Login'
 import DashboardNew from './components/pages/DashboardNew'
 import TradingNew from './components/pages/TradingNew'
 import Portfolio from './components/pages/Portfolio'
+import Signals from './components/pages/Signals'
+import Orders from './components/pages/Orders'
+import Watchlist from './components/pages/Watchlist'
 import Settings from './components/pages/Settings'
 
 function App() {
@@ -24,12 +27,14 @@ function App() {
 
   return (
     <BrowserRouter>
-      <MainLayout>
+      <MainLayout onLogout={handleLogout}>
         <Routes>
           <Route path="/" element={<DashboardNew />} />
           <Route path="/trading" element={<TradingNew />} />
           <Route path="/portfolio" element={<Portfolio />} />
-          <Route path="/analysis" element={<DashboardNew />} />
+          <Route path="/signals" element={<Signals />} />
+          <Route path="/orders" element={<Orders />} />
+          <Route path="/watchlist" element={<Watchlist />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
