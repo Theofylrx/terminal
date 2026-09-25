@@ -1,6 +1,4 @@
-import { test, expect } from '@playwright/test';
-import { AuthService } from '../../lib/api/services/authService';
-import config from '../../lib/config/config';
+import { test, expect } from '../../fixtures';
 
 /**
  * Authentication API Tests
@@ -15,18 +13,8 @@ import config from '../../lib/config/config';
  */
 
 test.describe('Authentication API', () => {
-  let authService: AuthService;
 
-  test.beforeEach(async () => {
-    authService = new AuthService();
-    await authService.init();
-  });
-
-  test.afterEach(async () => {
-    await authService.dispose();
-  });
-
-  test('@api @auth @critical - User Registration - Success', async () => {
+  test('@api @auth @critical - User Registration - Success', async ({ authService }) => {
     // Arrange
     const timestamp = Date.now();
     const registerData = {
@@ -50,7 +38,7 @@ test.describe('Authentication API', () => {
     expect(response.body).not.toHaveProperty('password'); // Password should not be returned
   });
 
-  test('@api @auth @critical - User Registration - Duplicate Email', async () => {
+  test('@api @auth @critical - User Registration - Duplicate Email', async ({ authService }) => {
     // Arrange
     const timestamp = Date.now();
     const registerData = {
@@ -75,7 +63,7 @@ test.describe('Authentication API', () => {
     expect(response.body.detail).toContain('already registered');
   });
 
-  test('@api @auth @critical - User Login - Success', async () => {
+  test('@api @auth @critical - User Login - Success', async ({ authService }) => {
     // Arrange
     const { credentials } = await authService.createTestUser();
 
@@ -95,7 +83,7 @@ test.describe('Authentication API', () => {
     expect(response.body.access_token.length).toBeGreaterThan(0);
   });
 
-  test('@api @auth @critical - User Login - Invalid Credentials', async () => {
+  test('@api @auth @critical - User Login - Invalid Credentials', async ({ authService }) => {
     // Act
     const response = await authService.login({
       username: 'nonexistent_user',
@@ -108,7 +96,7 @@ test.describe('Authentication API', () => {
     expect(response.body).toHaveProperty('detail');
   });
 
-  test('@api @auth @critical - Get Current User - Success', async () => {
+  test('@api @auth @critical - Get Current User - Success', async ({ authService }) => {
     // Arrange
     const { user, token } = await authService.createTestUser();
 
@@ -123,7 +111,7 @@ test.describe('Authentication API', () => {
     expect(response.body).toHaveProperty('email', user.email);
   });
 
-  test('@api @auth - Get Current User - Unauthorized', async () => {
+  test('@api @auth - Get Current User - Unauthorized', async ({ authService }) => {
     // Act
     const response = await authService.getCurrentUser('invalid_token');
 
@@ -132,7 +120,7 @@ test.describe('Authentication API', () => {
     expect(response.status).toBe(401);
   });
 
-  test('@api @auth - Logout - Success', async () => {
+  test('@api @auth - Logout - Success', async ({ authService }) => {
     // Arrange
     const { token } = await authService.createTestUser();
 
@@ -145,7 +133,7 @@ test.describe('Authentication API', () => {
     expect(response.body).toHaveProperty('message');
   });
 
-  test('@api @auth @smoke - JWT Token Format', async () => {
+  test('@api @auth @smoke - JWT Token Format', async ({ authService }) => {
     // Arrange
     const { credentials } = await authService.createTestUser();
 
@@ -170,7 +158,7 @@ test.describe('Authentication API', () => {
     });
   });
 
-  test('@api @auth - Password Requirements Validation', async () => {
+  test('@api @auth - Password Requirements Validation', async ({ authService }) => {
     // Arrange
     const timestamp = Date.now();
     const weakPasswordData = {

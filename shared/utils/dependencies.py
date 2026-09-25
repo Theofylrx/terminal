@@ -6,6 +6,7 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shared.database.models.user import User
+from shared.database.connection import get_db_session
 from shared.utils.auth import verify_token
 
 # OAuth2 scheme for token extraction
@@ -14,7 +15,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
 
 async def get_current_user(
     token: Annotated[str, Depends(oauth2_scheme)],
-    session: AsyncSession
+    session: Annotated[AsyncSession, Depends(get_db_session)]
 ) -> User:
     """
     Get the current authenticated user from JWT token.

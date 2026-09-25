@@ -269,3 +269,117 @@ prod-up: ## Start production stack
 
 prod-down: ## Stop production stack
 	@docker-compose -f docker-compose.prod.yml down
+
+# ==================== EXECUTOR SERVICE ====================
+
+logs-executor: ## Show Executor Service logs
+	@docker-compose logs -f executor-service
+
+logs-auto-trading: ## Show Auto-Trading Engine logs
+	@docker-compose logs -f auto-trading-engine
+
+restart-executor: ## Restart Executor Service
+	@echo '$(CYAN)Restarting Executor Service...$(NC)'
+	@docker-compose restart executor-service
+	@echo '$(GREEN)✓ Executor Service restarted$(NC)'
+
+# ==================== SYSTEM STATUS ====================
+
+status: ## Show comprehensive system status
+	@echo '$(CYAN)═══════════════════════════════════════════════════════════$(NC)'
+	@echo '$(CYAN)            TERMINAL AI TRADING SYSTEM STATUS              $(NC)'
+	@echo '$(CYAN)═══════════════════════════════════════════════════════════$(NC)'
+	@echo ''
+	@echo '$(YELLOW)📊 DOCKER SERVICES:$(NC)'
+	@docker-compose ps 2>&1 | grep -v warning | grep -E "terminal-" | awk '{printf "  %-25s %s\n", $$1, $$NF}'
+	@echo ''
+	@echo '$(YELLOW)🌐 SERVICE HEALTH:$(NC)'
+	@printf "  %-30s " "Executor Service (8007):"; \
+		curl -sf http://localhost:8007/api/v1/health | jq -r '.status' 2>/dev/null && echo '$(GREEN)✓$(NC)' || echo '$(RED)✗$(NC)'
+	@printf "  %-30s " "Auto-Trading Engine (8005):"; \
+		curl -sf http://localhost:8005/health | jq -r '.status' 2>/dev/null && echo '$(GREEN)✓$(NC)' || echo '$(RED)✗$(NC)'
+	@printf "  %-30s " "Market Data Service (8003):"; \
+		curl -sf http://localhost:8003/health | jq -r '.status' 2>/dev/null && echo '$(GREEN)✓$(NC)' || echo '$(RED)✗$(NC)'
+	@printf "  %-30s " "Gateway (8080):"; \
+		curl -sf http://localhost:8080/health | jq -r '.status' 2>/dev/null && echo '$(GREEN)✓$(NC)' || echo '$(RED)✗$(NC)'
+	@printf "  %-30s " "Auth Service (8001):"; \
+		curl -sf http://localhost:8001/health | jq -r '.status' 2>/dev/null && echo '$(GREEN)✓$(NC)' || echo '$(RED)✗$(NC)'
+	@printf "  %-30s " "Trading Service (8002):"; \
+		curl -sf http://localhost:8002/health | jq -r '.status' 2>/dev/null && echo '$(GREEN)✓$(NC)' || echo '$(RED)✗$(NC)'
+	@echo ''
+	@echo '$(YELLOW)🔗 BROKER CONNECTIONS:$(NC)'
+	@curl -sf http://localhost:8007/status 2>/dev/null | jq -r '.brokers | to_entries[] | "  \(.key | ascii_upcase): connected=\(.value.connected)"' || echo '  Could not fetch broker status'
+	@echo ''
+	@echo '$(YELLOW)📍 ACCESS URLS:$(NC)'
+	@echo '  🎨 Frontend:              http://localhost:3000'
+	@echo '  📊 API Gateway:           http://localhost:8080'
+	@echo '  📈 Grafana:               http://localhost:3001'
+	@echo '  🔍 Prometheus:            http://localhost:9090'
+	@echo '  🐰 RabbitMQ:              http://localhost:15672'
+	@echo ''
+	@echo '$(YELLOW)📚 API DOCUMENTATION:$(NC)'
+	@echo '  Executor Service:         http://localhost:8007/docs'
+	@echo '  Auto-Trading Engine:      http://localhost:8005/docs'
+	@echo '  Market Data Service:      http://localhost:8003/docs'
+	@echo ''
+
+# ==================== QUICK ACCESS ====================
+
+ui: ## Open Frontend UI in browser
+	@echo '$(CYAN)Opening Frontend UI...$(NC)'
+	@open http://localhost:3000 || xdg-open http://localhost:3000 || echo 'Visit http://localhost:3000'
+
+docs-executor: ## Open Executor Service API docs
+	@open http://localhost:8007/docs || xdg-open http://localhost:8007/docs || echo 'Visit http://localhost:8007/docs'
+
+docs-auto-trading: ## Open Auto-Trading Engine API docs
+	@open http://localhost:8005/docs || xdg-open http://localhost:8005/docs || echo 'Visit http://localhost:8005/docs'
+
+# ==================== TRADING PIPELINE ====================
+
+start-trading: ## Start complete trading pipeline
+	@echo '$(CYAN)Starting complete trading pipeline...$(NC)'
+	@docker-compose up -d postgres redis rabbitmq
+	@echo '$(YELLOW)Waiting for infrastructure...$(NC)'
+	@sleep 5
+	@docker-compose up -d market-data-service executor-service trading-service auto-trading-engine
+	@echo '$(GREEN)✓ Trading pipeline started$(NC)'
+	@make status
+
+stop-trading: ## Stop trading services (keep infrastructure)
+	@echo '$(CYAN)Stopping trading services...$(NC)'
+	@docker-compose stop auto-trading-engine executor-service market-data-service trading-service
+	@echo '$(GREEN)✓ Trading services stopped$(NC)'
+
+test-executor: ## Test Executor Service with sample order
+	@echo '$(CYAN)Testing Executor Service...$(NC)'
+	@echo '$(YELLOW)Testing position sizing...$(NC)'
+	@curl -X POST http://localhost:8007/api/v1/position-size \
+		-H "Content-Type: application/json" \
+		-d '{"user_id":"test","symbol":"AAPL","entry_price":150.0,"stop_loss_price":145.0,"risk_per_trade_percent":1.0,"method":"fixed_risk"}' \
+		| jq .
+	@echo ''
+	@echo '$(YELLOW)Testing risk check...$(NC)'
+	@curl -X POST http://localhost:8007/api/v1/risk-check \
+		-H "Content-Type: application/json" \
+		-d '{"user_id":"test","symbol":"AAPL","side":"BUY","quantity":10.0,"entry_price":150.0,"stop_loss_price":145.0}' \
+		| jq .
+
+# ==================== QUICK START ====================
+
+start-all: ## Start ALL services including frontend
+	@echo '$(CYAN)Starting ALL services...$(NC)'
+	@docker-compose up -d
+	@echo '$(GREEN)✓ All Docker services started$(NC)'
+	@echo '$(YELLOW)Note: Frontend runs natively on port 3000$(NC)'
+	@sleep 5
+	@make status
+
+quick-start: ## Quick start (infrastructure + core trading)
+	@echo '$(CYAN)Quick starting Terminal...$(NC)'
+	@docker-compose up -d postgres redis rabbitmq gateway auth-service trading-service
+	@docker-compose up -d market-data-service executor-service auto-trading-engine
+	@echo '$(GREEN)✓ Core services started$(NC)'
+	@sleep 3
+	@make status
+

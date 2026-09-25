@@ -52,6 +52,8 @@ class User(BaseModel):
     # Relationships
     positions = relationship("Position", back_populates="user", lazy="dynamic")
     orders = relationship("Order", back_populates="user", lazy="dynamic")
+    auto_trading_configs = relationship("AutoTradingConfig", back_populates="user", lazy="dynamic")
+    auto_trading_sessions = relationship("AutoTradingSession", back_populates="user", lazy="dynamic")
 
     def full_name(self) -> str:
         """Get full name."""

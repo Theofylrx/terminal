@@ -12,6 +12,7 @@
     "test:ui:all-browsers": "npx playwright test --grep \"@ui\"",
     "test:api": "npx playwright test --grep \"@api\" --project=api",
     "test:api:auth": "npx playwright test --grep \"@api.*@auth\" --project=api",
+    "test:api:executor": "npx playwright test --grep \"@api.*@executor\" --project=api",
     "test:api:signals": "npx playwright test --grep \"@api.*@signals\" --project=api",
     "test:api:trading": "npx playwright test --grep \"@api.*@trading\" --project=api",
     "test:db": "npx playwright test --grep \"@database\" --project=database",

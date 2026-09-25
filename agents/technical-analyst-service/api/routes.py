@@ -65,7 +65,7 @@ router = APIRouter()
 
 # Global service instances
 signal_generator = SignalGenerator()
-mtf_analyzer = MultiTimeframeAnalyzer(signal_generator)
+mtf_analyzer = MultiTimeframeAnalyzer()  # No arguments needed
 reasoning_engine = ReasoningEngine()
 evidence_collector = EvidenceCollector()
 fundamental_analyzer = FundamentalAnalyzer()
@@ -1499,7 +1499,7 @@ async def comprehensive_analysis(
             } if decision.entry_plan else None,
 
             # Timeframe summary (JSON) - TODO: Add this to decision_framework if not present
-            timeframe_summary={tf: {"bias": "BULLISH" if mtf_analysis.timeframe_analyses[tf].overall_bias > 0 else "BEARISH", "confidence": abs(mtf_analysis.timeframe_analyses[tf].overall_confidence)} for tf in mtf_analysis.timeframe_analyses.keys()},
+            timeframe_summary={tf: {"bias": mtf_analysis.timeframe_analyses[tf].bias.value, "confidence": mtf_analysis.timeframe_analyses[tf].confidence} for tf in mtf_analysis.timeframe_analyses.keys()},
 
             # Confidence breakdown (JSON)
             confidence_breakdown=decision.confidence_breakdown,

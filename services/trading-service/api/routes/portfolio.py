@@ -8,12 +8,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 
 import sys
-sys.path.append('/app')
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
 from shared.database.connection import get_db_session
-from services.trading_service.repositories.position_repository import PositionRepository
-from services.trading_service.services.position_service import PositionService
-from services.trading_service.api.schemas.trading import (
+from ...repositories.position_repository import PositionRepository
+from ...services.position_service import PositionService
+from ..schemas.trading import (
     PortfolioSummaryResponse,
     PositionResponse
 )

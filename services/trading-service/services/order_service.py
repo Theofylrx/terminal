@@ -7,12 +7,13 @@ from typing import List, Optional, Dict, Any
 from fastapi import HTTPException, status
 
 import sys
-sys.path.append('/app')
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from shared.database.models.order import Order, OrderStatus, OrderSide, OrderType, TimeInForce
 from shared.events.event_bus import EventPublisher
 from shared.events.event_types import EventType
-from services.trading_service.repositories.order_repository import OrderRepository
+from ..repositories.order_repository import OrderRepository
 
 
 class OrderService:

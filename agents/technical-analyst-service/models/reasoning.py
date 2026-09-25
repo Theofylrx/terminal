@@ -261,11 +261,13 @@ class EntryPlan:
     targets: List[Target]
 
     risk_reward: float
-    position_size_recommendation: Optional[float] = None
 
     # Timing
     entry_trigger: str  # What should trigger entry
     invalidation: str   # What invalidates the setup
+
+    # Optional fields must come after required fields
+    position_size_recommendation: Optional[float] = None
 
 
 @dataclass

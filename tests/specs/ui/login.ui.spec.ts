@@ -1,6 +1,4 @@
-import { test, expect } from '@playwright/test';
-import { LoginPage } from '../../pages/loginPage';
-import { AuthService } from '../../lib/api/services/authService';
+import { test, expect } from '../../fixtures';
 import config from '../../lib/config/config';
 
 /**
@@ -16,23 +14,12 @@ import config from '../../lib/config/config';
  */
 
 test.describe('Login Page', () => {
-  let loginPage: LoginPage;
-  let authService: AuthService;
-
-  test.beforeEach(async ({ page }) => {
-    loginPage = new LoginPage(page);
-    authService = new AuthService();
-    await authService.init();
-
+  test.beforeEach(async ({ loginPage }) => {
     // Navigate to login page
     await loginPage.gotoLogin();
   });
 
-  test.afterEach(async () => {
-    await authService.dispose();
-  });
-
-  test('@ui @login @critical - Login page loads correctly', async () => {
+  test('@ui @login @critical - Login page loads correctly', async ({ loginPage }) => {
     // Assert - All elements visible
     await loginPage.validateLoginPage();
 
@@ -40,7 +27,7 @@ test.describe('Login Page', () => {
     await loginPage.validateTitle('Terminal');
   });
 
-  test('@ui @login @critical - Successful login redirects to dashboard', async () => {
+  test('@ui @login @critical - Successful login redirects to dashboard', async ({ loginPage, authService }) => {
     // Arrange - Create test user via API
     const { credentials } = await authService.createTestUser('ui_test');
 
@@ -51,7 +38,7 @@ test.describe('Login Page', () => {
     await loginPage.validateSuccessfulLogin();
   });
 
-  test('@ui @login @critical - Failed login shows error message', async () => {
+  test('@ui @login @critical - Failed login shows error message', async ({ loginPage }) => {
     // Act - Login with invalid credentials
     await loginPage.login('invalid_user', 'invalid_password');
 
@@ -59,7 +46,7 @@ test.describe('Login Page', () => {
     await loginPage.validateErrorMessage();
   });
 
-  test('@ui @login - Empty username validation', async () => {
+  test('@ui @login - Empty username validation', async ({ loginPage }) => {
     // Act
     await loginPage.enterPassword('somepassword');
     await loginPage.clickLogin();
@@ -68,7 +55,7 @@ test.describe('Login Page', () => {
     await expect(loginPage.usernameInput).toHaveAttribute('required', '');
   });
 
-  test('@ui @login - Empty password validation', async () => {
+  test('@ui @login - Empty password validation', async ({ loginPage }) => {
     // Act
     await loginPage.enterUsername('someuser');
     await loginPage.clickLogin();
@@ -77,17 +64,17 @@ test.describe('Login Page', () => {
     await expect(loginPage.passwordInput).toHaveAttribute('required', '');
   });
 
-  test('@ui @login @smoke - Login button is enabled', async () => {
+  test('@ui @login @smoke - Login button is enabled', async ({ loginPage }) => {
     // Assert
     await expect(loginPage.loginButton).toBeEnabled();
   });
 
-  test('@ui @login - Password field is masked', async () => {
+  test('@ui @login - Password field is masked', async ({ loginPage }) => {
     // Assert
     await expect(loginPage.passwordInput).toHaveAttribute('type', 'password');
   });
 
-  test('@ui @login - Login with Enter key', async ({ page }) => {
+  test('@ui @login - Login with Enter key', async ({ page, loginPage, authService }) => {
     // Arrange
     const { credentials } = await authService.createTestUser('ui_enter_test');
 
@@ -100,7 +87,7 @@ test.describe('Login Page', () => {
     await loginPage.validateSuccessfulLogin();
   });
 
-  test('@ui @login - Register link navigation', async () => {
+  test('@ui @login - Register link navigation', async ({ loginPage }) => {
     // Act
     await loginPage.clickRegister();
 
@@ -108,7 +95,7 @@ test.describe('Login Page', () => {
     await loginPage.validatePageURL('/register');
   });
 
-  test('@ui @login - Forgot password link navigation', async () => {
+  test('@ui @login - Forgot password link navigation', async ({ loginPage }) => {
     // Skip if forgot password not implemented
     test.skip(!await loginPage.isVisible(loginPage.forgotPasswordLink), 'Forgot password not implemented');
 
@@ -119,7 +106,7 @@ test.describe('Login Page', () => {
     await loginPage.validatePageURL('/forgot-password');
   });
 
-  test('@ui @login - Login persists session', async () => {
+  test('@ui @login - Login persists session', async ({ loginPage, authService }) => {
     // Arrange
     const { credentials } = await authService.createTestUser('session_test');
 
@@ -134,7 +121,7 @@ test.describe('Login Page', () => {
     await loginPage.validatePageURL('/dashboard');
   });
 
-  test('@ui @login - Logout clears session', async ({ page }) => {
+  test('@ui @login - Logout clears session', async ({ page, loginPage, authService }) => {
     // Arrange
     const { credentials } = await authService.createTestUser('logout_test');
 

@@ -7,12 +7,13 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import sys
-sys.path.append('/app')
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
 from shared.database.connection import get_db_session
-from services.auth_service.repositories.user_repository import UserRepository
-from services.auth_service.services.auth_service import AuthService
-from services.auth_service.api.schemas.auth import (
+from ...repositories.user_repository import UserRepository
+from ...services.auth_service import AuthService
+from ..schemas.auth import (
     UserRegisterRequest,
     UserLoginRequest,
     RefreshTokenRequest,

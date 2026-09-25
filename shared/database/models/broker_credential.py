@@ -37,7 +37,7 @@ class BrokerCredential(BaseModel):
     __tablename__ = "broker_credentials"
 
     # User ownership - CRITICAL for multi-user isolation
-    user_id = Column(String(36), ForeignKey("users.id"), nullable=False, index=True)
+    user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Broker identification
     broker_name = Column(String(50), nullable=False)  # "alpaca", "binance", "interactive_brokers"

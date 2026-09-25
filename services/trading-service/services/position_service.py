@@ -7,12 +7,13 @@ from typing import List, Optional, Dict, Any
 from fastapi import HTTPException, status
 
 import sys
-sys.path.append('/app')
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from shared.database.models.position import Position, PositionStatus, PositionSide, AssetClass
 from shared.events.event_bus import EventPublisher
 from shared.events.event_types import EventType
-from services.trading_service.repositories.position_repository import PositionRepository
+from ..repositories.position_repository import PositionRepository
 
 
 class PositionService:

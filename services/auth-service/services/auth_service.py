@@ -10,11 +10,12 @@ from passlib.context import CryptContext
 from jose import JWTError, jwt
 
 import sys
-sys.path.append('/app')
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from shared.database.models.user import User
-from services.auth_service.repositories.user_repository import UserRepository
-from services.auth_service.core.config import settings
+from ..repositories.user_repository import UserRepository
+from ..core.config import settings
 
 # Password hashing context
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

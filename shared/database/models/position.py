@@ -60,9 +60,9 @@ class Position(BaseModel):
 
     # Position details
     symbol = Column(String(20), nullable=False, index=True)
-    asset_class = Column(SQLEnum(AssetClass), nullable=False)
-    side = Column(SQLEnum(PositionSide), nullable=False)
-    status = Column(SQLEnum(PositionStatus), nullable=False, default=PositionStatus.OPEN, index=True)
+    asset_class = Column(SQLEnum(AssetClass, name="asset_class"), nullable=False)
+    side = Column(SQLEnum(PositionSide, name="position_side"), nullable=False)
+    status = Column(SQLEnum(PositionStatus, name="position_status"), nullable=False, default=PositionStatus.OPEN, index=True)
 
     # Quantities and prices
     quantity = Column(Float, nullable=False)

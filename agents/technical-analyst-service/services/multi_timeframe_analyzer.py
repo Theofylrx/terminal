@@ -22,7 +22,7 @@ from ..models.reasoning import (
     Argument,
     Evidence,
 )
-from ...shared.database.models.ohlcv import OHLCV
+from shared.database.models.ohlcv import OHLCV
 
 logger = logging.getLogger(__name__)
 

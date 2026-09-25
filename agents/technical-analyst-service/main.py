@@ -39,8 +39,8 @@ async def lifespan(app: FastAPI):
     logger.info("🚀 Technical Analyst Service starting...")
 
     try:
-        # Initialize database
-        await init_db(settings.DATABASE_URL)
+        # Initialize database (init_db is not async)
+        init_db(settings.DATABASE_URL)
         logger.info("✅ Database initialized")
 
         logger.info("✅ Technical Analyst Service started successfully")
@@ -187,10 +187,14 @@ async def root():
 if __name__ == "__main__":
     import uvicorn
 
+    # Get port from environment or use default
+    import os
+    port = int(os.getenv("SERVICE_PORT", "8004"))
+
     uvicorn.run(
-        "main:app",
+        "agents.technical-analyst-service.main:app",
         host="0.0.0.0",
-        port=8000,
+        port=port,
         reload=settings.DEBUG,
         log_level=settings.LOG_LEVEL.lower(),
     )

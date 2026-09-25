@@ -30,7 +30,7 @@ services:
   redis:
     image: redis:7-alpine
     container_name: terminal-redis
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-}
+    command: redis-server --appendonly yes
     ports:
       - "6379:6379"
     volumes:
@@ -280,28 +280,144 @@ services:
       retries: 3
     # Can scale: docker-compose up -d --scale technical-analyst-service=3
 
+  executor-service:
+    build:
+      context: .
+      dockerfile: agents/executor-service/Dockerfile
+    container_name: terminal-executor
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-trading_user}:${DB_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-terminal_db}
+      - REDIS_URL=redis://redis:6379/0
+      - RABBITMQ_URL=amqp://${RABBITMQ_USER:-trading}:${RABBITMQ_PASSWORD:-changeme}@rabbitmq:5672/
+      # Broker API Credentials - Alpaca
+      - ALPACA_API_KEY=${ALPACA_API_KEY:-}
+      - ALPACA_API_SECRET=${ALPACA_API_SECRET:-}
+      - ALPACA_BASE_URL=${ALPACA_BASE_URL:-https://paper-api.alpaca.markets}
+      # Broker API Credentials - Binance
+      - BINANCE_API_KEY=${BINANCE_API_KEY:-}
+      - BINANCE_API_SECRET=${BINANCE_API_SECRET:-}
+      - BINANCE_BASE_URL=${BINANCE_BASE_URL:-https://testnet.binance.vision}
+      # Service URLs
+      - MARKET_DATA_SERVICE_URL=http://market-data-service:8000
+      - TRADING_SERVICE_URL=http://trading-service:8000
+      - NOTIFICATION_SERVICE_URL=http://notification-service:8000
+      # Application Settings
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - DEBUG=${DEBUG:-true}
+      # Risk Management
+      - MAX_RISK_PER_TRADE_PERCENT=${MAX_RISK_PER_TRADE_PERCENT:-5.0}
+      - MAX_ACCOUNT_RISK_PERCENT=${MAX_ACCOUNT_RISK_PERCENT:-20.0}
+      - MAX_TOTAL_POSITIONS=${MAX_TOTAL_POSITIONS:-10}
+      - MAX_DAILY_LOSS_PERCENT=${MAX_DAILY_LOSS_PERCENT:-5.0}
+      # Feature Flags
+      - ENABLE_PAPER_TRADING=${ENABLE_PAPER_TRADING:-true}
+      - ENABLE_LIVE_TRADING=${ENABLE_LIVE_TRADING:-false}
+      - DRY_RUN_MODE=${DRY_RUN_MODE:-false}
+    ports:
+      - "8007:8007"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      market-data-service:
+        condition: service_started
+      trading-service:
+        condition: service_started
+    volumes:
+      - ./agents/executor-service:/app/agents/executor-service:ro
+      - ./shared:/app/shared:ro
+    networks:
+      - terminal_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8007/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  # ==================== AUTO-TRADING ENGINE ====================
+
+  auto-trading-engine:
+    build:
+      context: .
+      dockerfile: services/auto-trading-engine/Dockerfile
+    container_name: terminal-auto-trading
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-trading_user}:${DB_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-terminal_db}
+      - REDIS_URL=redis://redis:6379/0
+      - RABBITMQ_URL=amqp://${RABBITMQ_USER:-trading}:${RABBITMQ_PASSWORD:-changeme}@rabbitmq:5672/
+      # Service Integration URLs
+      - MARKET_DATA_SERVICE_URL=http://market-data-service:8000
+      - TECHNICAL_ANALYST_SERVICE_URL=http://technical-analyst-service:8000
+      - EXECUTOR_SERVICE_URL=http://executor-service:8000
+      - TRADING_SERVICE_URL=http://trading-service:8000
+      - NOTIFICATION_SERVICE_URL=http://notification-service:8000
+      # Application Settings
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - DEBUG=${DEBUG:-true}
+      # Worker Intervals
+      - SYMBOL_MONITOR_INTERVAL_SECONDS=5
+      - POSITION_MONITOR_INTERVAL_SECONDS=5
+      - SESSION_MANAGER_INTERVAL_SECONDS=60
+      # Prometheus
+      - ENABLE_PROMETHEUS_METRICS=true
+    ports:
+      - "8005:8005"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      market-data-service:
+        condition: service_started
+      technical-analyst-service:
+        condition: service_started
+      executor-service:
+        condition: service_started
+      trading-service:
+        condition: service_started
+      # TODO: Add when implemented: notification-service
+    volumes:
+      - ./services/auto-trading-engine:/app/services/auto-trading-engine:ro
+      - ./shared:/app/shared:ro
+    networks:
+      - terminal_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8005/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
   # ==================== FRONTEND ====================
 
-  # frontend:
-  #   build:
-  #     context: ./frontend
-  #     dockerfile: Dockerfile
-  #     target: development
-  #   container_name: terminal-frontend
-  #   environment:
-  #     - REACT_APP_API_URL=http://localhost:8080
-  #     - REACT_APP_WS_URL=ws://localhost:8080/ws
-  #   ports:
-  #     - "3000:3000"
-  #   depends_on:
-  #     - gateway
-  #   volumes:
-  #     - ./frontend:/app
-  #     - /app/node_modules
-  #   networks:
-  #     - terminal_network
-  #   stdin_open: true
-  #   tty: true
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: development
+    container_name: terminal-frontend
+    environment:
+      - VITE_API_URL=http://localhost:8001
+      - VITE_WS_URL=ws://localhost:8001/ws
+    ports:
+      - "3002:3000"  # Docker frontend on 3002, native on 3000
+    depends_on:
+      market-data-service:
+        condition: service_healthy
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - terminal_network
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
 
 networks:
   terminal_network:

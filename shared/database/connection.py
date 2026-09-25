@@ -64,6 +64,10 @@ def init_db(database_url: str | None = None, echo: bool = False) -> AsyncEngine:
     if _engine is None:
         url = database_url or get_database_url()
 
+        # Debug logging
+        print(f"[DEBUG] Creating async engine with URL: {url}")
+        print(f"[DEBUG] URL type: {type(url)}")
+
         _engine = create_async_engine(
             url,
             echo=echo,
@@ -74,6 +78,8 @@ def init_db(database_url: str | None = None, echo: bool = False) -> AsyncEngine:
             # Use NullPool for serverless environments
             # poolclass=NullPool if os.getenv("SERVERLESS") else None
         )
+
+        print(f"[DEBUG] Engine created with dialect: {_engine.dialect.name}, driver: {_engine.dialect.driver}")
 
         _async_session_maker = async_sessionmaker(
             _engine,

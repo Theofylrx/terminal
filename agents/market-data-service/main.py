@@ -49,15 +49,16 @@ async def lifespan(app: FastAPI):
 
     try:
         # Initialize database
-        await init_db(settings.DATABASE_URL)
+        init_db(settings.DATABASE_URL)
         logger.info("✅ Database initialized")
 
         # Initialize Redis
-        redis_client = await get_redis_client(settings.REDIS_URL)
+        redis_client = await get_redis_client()
         logger.info("✅ Redis connected")
 
         # Initialize event publisher
-        event_publisher = EventPublisher(redis_client, settings.REDIS_STREAM_MAXLEN)
+        event_publisher = EventPublisher()
+        await event_publisher.connect()
 
         # Initialize database session
         session_maker = get_session_maker()

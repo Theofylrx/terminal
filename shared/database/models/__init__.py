@@ -10,6 +10,8 @@ from .signal import Signal
 from .user import User
 from .trading_decision import TradingDecision, Evidence, AnalysisReport
 from .broker_credential import BrokerCredential, BrokerType
+from .auto_trading_config import AutoTradingConfig, StrategyType
+from .auto_trading_session import AutoTradingSession, SessionStatus
 
 __all__ = [
     "BaseModel",
@@ -24,5 +26,9 @@ __all__ = [
     "Evidence",
     "AnalysisReport",
     "BrokerCredential",
-    "BrokerType"
+    "BrokerType",
+    "AutoTradingConfig",
+    "StrategyType",
+    "AutoTradingSession",
+    "SessionStatus",
 ]

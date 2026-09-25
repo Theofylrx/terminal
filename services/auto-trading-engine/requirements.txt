@@ -1,0 +1,31 @@
+# Auto-Trading Engine Dependencies
+
+# Core Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+
+# HTTP Client (for calling other services)
+httpx==0.25.2
+
+# Database
+sqlalchemy[asyncio]==2.0.23
+asyncpg==0.29.0
+alembic==1.13.0
+
+# Validation
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# Redis (for caching and events)
+redis[hiredis]==5.0.1
+
+# Monitoring
+prometheus-client==0.19.0
+prometheus-fastapi-instrumentator==6.1.0
+
+# Utilities
+python-dotenv==1.0.0
+
+# Date/Time
+python-dateutil==2.8.2

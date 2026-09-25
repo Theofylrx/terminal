@@ -35,13 +35,13 @@ class Signal(BaseModel):
     __tablename__ = "signals"
 
     # User ownership - CRITICAL for multi-user isolation
-    user_id = Column(String(36), nullable=False, index=True)
+    user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Signal details
     symbol = Column(String(20), nullable=False, index=True)
     timeframe = Column(String(10), nullable=False)
-    signal_type = Column(SQLEnum(SignalType), nullable=False)
-    status = Column(SQLEnum(SignalStatus), nullable=False, default=SignalStatus.ACTIVE)
+    signal_type = Column(SQLEnum(SignalType, name="signal_type"), nullable=False)
+    status = Column(SQLEnum(SignalStatus, name="signal_status"), nullable=False, default=SignalStatus.ACTIVE)
 
     # Price levels
     entry_price = Column(Float, nullable=False)

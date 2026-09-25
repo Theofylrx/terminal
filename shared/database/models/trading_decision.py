@@ -43,13 +43,13 @@ class TradingDecision(BaseModel):
     __tablename__ = "trading_decisions"
 
     # User ownership - CRITICAL for multi-user isolation
-    user_id = Column(String(36), nullable=False, index=True)
+    user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Basic information
     symbol = Column(String(20), nullable=False, index=True)
-    action = Column(SQLEnum(ActionType), nullable=False)
+    action = Column(SQLEnum(ActionType, name="action_type"), nullable=False)
     confidence = Column(Float, nullable=False)  # 0.0 to 1.0
-    confidence_level = Column(SQLEnum(ConfidenceLevel), nullable=False)
+    confidence_level = Column(SQLEnum(ConfidenceLevel, name="confidence_level"), nullable=False)
 
     # Decision metadata
     generated_at = Column(DateTime, nullable=False, default=datetime.utcnow, index=True)
@@ -170,7 +170,8 @@ class Evidence(BaseModel):
     timestamp = Column(DateTime, nullable=True)
 
     # Evidence metadata (stored as JSON for flexibility)
-    metadata = Column(JSON, nullable=True)
+    # NOTE: Cannot use 'metadata' as column name (reserved by SQLAlchemy)
+    evidence_metadata = Column(JSON, nullable=True)
 
     # Relationship
     trading_decision = relationship("TradingDecision", back_populates="evidence_items")
@@ -197,7 +198,7 @@ class Evidence(BaseModel):
             "score": self.score,
             "confidence": self.confidence,
             "timestamp": self.timestamp.isoformat() if self.timestamp else None,
-            "metadata": self.metadata,
+            "metadata": self.evidence_metadata,  # Return as 'metadata' in API but stored as 'evidence_metadata'
         }
 
 

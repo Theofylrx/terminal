@@ -8,12 +8,13 @@ from fastapi import APIRouter, Depends, Query, status, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import sys
-sys.path.append('/app')
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
 from shared.database.connection import get_db_session
-from services.trading_service.repositories.order_repository import OrderRepository
-from services.trading_service.services.order_service import OrderService
-from services.trading_service.api.schemas.trading import (
+from ...repositories.order_repository import OrderRepository
+from ...services.order_service import OrderService
+from ..schemas.trading import (
     CreateOrderRequest,
     OrderResponse,
     MessageResponse

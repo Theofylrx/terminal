@@ -7,6 +7,7 @@ from sqlalchemy import Column, String, Float, Enum as SQLEnum, ForeignKey, Index
 from sqlalchemy.orm import relationship
 import enum
 from .base_model import BaseModel
+from .position import AssetClass
 
 
 class OrderType(str, enum.Enum):
@@ -84,10 +85,10 @@ class Order(BaseModel):
 
     # Order details
     symbol = Column(String(20), nullable=False, index=True)
-    asset_class = Column(SQLEnum("AssetClass"), nullable=False)  # Reference from Position model
-    order_type = Column(SQLEnum(OrderType), nullable=False)
-    side = Column(SQLEnum(OrderSide), nullable=False)
-    status = Column(SQLEnum(OrderStatus), nullable=False, default=OrderStatus.PENDING, index=True)
+    asset_class = Column(SQLEnum(AssetClass, name="asset_class"), nullable=False)  # Reference from Position model
+    order_type = Column(SQLEnum(OrderType, name="order_type"), nullable=False)
+    side = Column(SQLEnum(OrderSide, name="order_side"), nullable=False)
+    status = Column(SQLEnum(OrderStatus, name="order_status"), nullable=False, default=OrderStatus.PENDING, index=True)
 
     # Quantities
     quantity = Column(Float, nullable=False)
@@ -99,7 +100,7 @@ class Order(BaseModel):
     avg_fill_price = Column(Float, nullable=True)
 
     # Order parameters
-    time_in_force = Column(SQLEnum(TimeInForce), nullable=False, default=TimeInForce.GTC)
+    time_in_force = Column(SQLEnum(TimeInForce, name="time_in_force"), nullable=False, default=TimeInForce.GTC)
 
     # Broker details
     broker_order_id = Column(String(100), nullable=True, index=True)

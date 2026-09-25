@@ -22,15 +22,16 @@ async function createTestUserDirect(db: DatabaseClient, prefix: string) {
   const userId = crypto.randomUUID();
 
   await db.query(
-    `INSERT INTO users (id, email, username, hashed_password, is_active, is_verified)
-     VALUES ($1, $2, $3, $4, $5, $6)`,
+    `INSERT INTO users (id, email, username, hashed_password, is_active, is_verified, is_superuser, created_at, updated_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())`,
     [
       userId,
       `${prefix}_${timestamp}_${random}@test.com`,
       `${prefix}_${timestamp}_${random}`,
       'hashed_password_placeholder', // Not testing auth, just isolation
       true,
-      false
+      false,
+      false  // is_superuser
     ]
   );
 
@@ -56,16 +57,16 @@ test.describe('User Data Isolation (Direct DB)', () => {
 
     // Create signal for user1
     await db.query(
-      `INSERT INTO signals (user_id, symbol, timeframe, signal_type, status, entry_price, confidence)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-      [user1.id, 'BTCUSD', '1h', 'buy', 'active', 50000.0, 85.5]
+      `INSERT INTO signals (id, user_id, symbol, timeframe, signal_type, status, entry_price, confidence, generated_at, created_at, updated_at)
+       VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, NOW(), NOW(), NOW())`,
+      [user1.id, 'BTCUSD', '1h', 'BUY', 'ACTIVE', 50000.0, 85.5]
     );
 
     // Create signal for user2
     await db.query(
-      `INSERT INTO signals (user_id, symbol, timeframe, signal_type, status, entry_price, confidence)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-      [user2.id, 'ETHUSD', '1h', 'sell', 'active', 3000.0, 75.0]
+      `INSERT INTO signals (id, user_id, symbol, timeframe, signal_type, status, entry_price, confidence, generated_at, created_at, updated_at)
+       VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, NOW(), NOW(), NOW())`,
+      [user2.id, 'ETHUSD', '1h', 'SELL', 'ACTIVE', 3000.0, 75.0]
     );
 
     // Act - Query signals for each user
@@ -109,11 +110,12 @@ test.describe('User Data Isolation (Direct DB)', () => {
     // Create trading decision for user1
     await db.query(
       `INSERT INTO trading_decisions (
-        user_id, symbol, action, confidence, confidence_level, should_trade,
+        id, user_id, symbol, action, confidence, confidence_level, should_trade,
         primary_arguments, counter_arguments, risk_assessment,
-        timeframe_summary, confidence_breakdown, executive_summary, detailed_reasoning
+        timeframe_summary, confidence_breakdown, executive_summary, detailed_reasoning,
+        generated_at, created_at, updated_at
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
+      VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW(), NOW(), NOW())`,
       [
         user1.id,
         'BTCUSD',
@@ -134,11 +136,12 @@ test.describe('User Data Isolation (Direct DB)', () => {
     // Create trading decision for user2
     await db.query(
       `INSERT INTO trading_decisions (
-        user_id, symbol, action, confidence, confidence_level, should_trade,
+        id, user_id, symbol, action, confidence, confidence_level, should_trade,
         primary_arguments, counter_arguments, risk_assessment,
-        timeframe_summary, confidence_breakdown, executive_summary, detailed_reasoning
+        timeframe_summary, confidence_breakdown, executive_summary, detailed_reasoning,
+        generated_at, created_at, updated_at
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
+      VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW(), NOW(), NOW())`,
       [
         user2.id,
         'ETHUSD',
@@ -190,21 +193,23 @@ test.describe('User Data Isolation (Direct DB)', () => {
     // Create broker credential for user1 (Alpaca)
     await db.query(
       `INSERT INTO broker_credentials (
-        user_id, broker_name, account_name,
-        encrypted_api_key, encrypted_api_secret, is_paper_trading
+        id, user_id, broker_name, account_name,
+        encrypted_api_key, encrypted_api_secret, is_paper_trading,
+        is_active, is_verified, created_at, updated_at
       )
-      VALUES ($1, $2, $3, $4, $5, $6)`,
-      [user1.id, 'alpaca', 'Alpaca Account', 'encrypted_key_1', 'encrypted_secret_1', true]
+      VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())`,
+      [user1.id, 'alpaca', 'Alpaca Account', 'encrypted_key_1', 'encrypted_secret_1', true, true, false]
     );
 
     // Create broker credential for user2 (Binance)
     await db.query(
       `INSERT INTO broker_credentials (
-        user_id, broker_name, account_name,
-        encrypted_api_key, encrypted_api_secret, is_paper_trading
+        id, user_id, broker_name, account_name,
+        encrypted_api_key, encrypted_api_secret, is_paper_trading,
+        is_active, is_verified, created_at, updated_at
       )
-      VALUES ($1, $2, $3, $4, $5, $6)`,
-      [user2.id, 'binance', 'Binance Account', 'encrypted_key_2', 'encrypted_secret_2', true]
+      VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())`,
+      [user2.id, 'binance', 'Binance Account', 'encrypted_key_2', 'encrypted_secret_2', true, true, false]
     );
 
     // Act
@@ -246,13 +251,13 @@ test.describe('User Data Isolation (Direct DB)', () => {
 
     // Create related data
     await db.query(
-      'INSERT INTO signals (user_id, symbol, timeframe, signal_type, status, entry_price, confidence) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-      [user.id, 'BTCUSD', '1h', 'buy', 'active', 50000.0, 85.5]
+      'INSERT INTO signals (id, user_id, symbol, timeframe, signal_type, status, entry_price, confidence, generated_at, created_at, updated_at) VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, NOW(), NOW(), NOW())',
+      [user.id, 'BTCUSD', '1h', 'BUY', 'ACTIVE', 50000.0, 85.5]
     );
 
     await db.query(
-      'INSERT INTO broker_credentials (user_id, broker_name, encrypted_api_key, encrypted_api_secret, is_paper_trading) VALUES ($1, $2, $3, $4, $5)',
-      [user.id, 'alpaca', 'key', 'secret', true]
+      'INSERT INTO broker_credentials (id, user_id, broker_name, encrypted_api_key, encrypted_api_secret, is_paper_trading, is_active, is_verified, created_at, updated_at) VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, NOW(), NOW())',
+      [user.id, 'alpaca', 'key', 'secret', true, true, false]
     );
 
     // Verify data exists
@@ -309,16 +314,16 @@ test.describe('User Data Isolation (Direct DB)', () => {
 
     // Each user gets their own signal
     await db.query(
-      'INSERT INTO signals (user_id, symbol, timeframe, signal_type, status, entry_price, confidence) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-      [user1.id, 'BTCUSD', '1h', 'buy', 'active', 50000.0, 85.5]
+      'INSERT INTO signals (id, user_id, symbol, timeframe, signal_type, status, entry_price, confidence, generated_at, created_at, updated_at) VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, NOW(), NOW(), NOW())',
+      [user1.id, 'BTCUSD', '1h', 'BUY', 'ACTIVE', 50000.0, 85.5]
     );
     await db.query(
-      'INSERT INTO signals (user_id, symbol, timeframe, signal_type, status, entry_price, confidence) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-      [user2.id, 'ETHUSD', '1h', 'sell', 'active', 3000.0, 75.0]
+      'INSERT INTO signals (id, user_id, symbol, timeframe, signal_type, status, entry_price, confidence, generated_at, created_at, updated_at) VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, NOW(), NOW(), NOW())',
+      [user2.id, 'ETHUSD', '1h', 'SELL', 'ACTIVE', 3000.0, 75.0]
     );
     await db.query(
-      'INSERT INTO signals (user_id, symbol, timeframe, signal_type, status, entry_price, confidence) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-      [user3.id, 'AAPL', '1h', 'buy', 'active', 180.0, 90.0]
+      'INSERT INTO signals (id, user_id, symbol, timeframe, signal_type, status, entry_price, confidence, generated_at, created_at, updated_at) VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, NOW(), NOW(), NOW())',
+      [user3.id, 'AAPL', '1h', 'BUY', 'ACTIVE', 180.0, 90.0]
     );
 
     // Act - Query each user's signals

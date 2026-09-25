@@ -10,11 +10,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
 
 import sys
-sys.path.append('/app')
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from shared.database.connection import init_db, close_db
-from services.auth_service.core.config import settings
-from services.auth_service.api.routes import auth
+from .core.config import settings
+from .api.routes import auth
 
 # Configure logging
 logging.basicConfig(
